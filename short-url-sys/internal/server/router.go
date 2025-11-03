@@ -18,6 +18,7 @@ func SetupRouter(config *config.Config, srv *Server) {
 	// 全局中间件
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	router.Use(middleware.Cors())
 	router.Use(middleware.ErrorHandler())
 
 	// 初始化处理器
