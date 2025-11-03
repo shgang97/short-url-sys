@@ -11,6 +11,15 @@ import (
 type Service interface {
 	GetLinkStats(ctx context.Context, shortCode string, startDate, endDate *time.Time) (*model.StatsResponse, error)
 	GetDailyStats(ctx context.Context, shortCode string, days int) ([]model.DailyStats, error)
+
+	// GetSystemStats 系统统计信息
+	GetSystemStats(ctx context.Context) (*model.SystemStats, error)
+
+	// 高级统计信息
+	GetTopLinks(ctx context.Context, limit int, days int) ([]model.LinkStats, error)
+	GetClickTimeline(ctx context.Context, shortCode string, hours int) ([]model.ClickTimeline, error)
+	GetGeographicStats(ctx context.Context, shortCode string) ([]model.GeographicStats, error)
+	GetPlatformStats(ctx context.Context, shortCode string) ([]model.PlatformStats, error)
 }
 
 type statsService struct {

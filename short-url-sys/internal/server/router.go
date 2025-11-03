@@ -74,6 +74,11 @@ func SetupRouter(config *config.Config, srv *Server) {
 			{
 				stats.GET("/:code", statsHandler.GetLinkStats)
 				stats.GET("/daily/:code", statsHandler.GetDailyStats)
+
+				stats.GET("/system", statsHandler.GetSystemStats)
+				stats.GET("/top-links", statsHandler.GetTopLinks)
+				stats.GET("/timeline/:code", statsHandler.GetClickTimeline)
+				stats.GET("/geographic/:code", statsHandler.GetGeographicStats)
 			}
 
 			// 生成二维码相关接口
