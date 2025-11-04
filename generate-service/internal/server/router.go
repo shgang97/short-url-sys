@@ -33,8 +33,25 @@ func setupRouter(config *config.Config, srv *Server) {
 			Services:  make(map[string]string),
 		}
 
-		// TODO 检查MYSQL连接
-		// TODO 检查Redis连接
+		// 检查MySQL连接
+		if srv.mysqlDB != nil {
+			if err := srv.mysqlDB.HealthCheck(); err != nil {
+				health.Status = "degraded"
+				health.Services["mysql"] = "unhealthy"
+			} else {
+				health.Services["mysql"] = "healthy"
+			}
+		}
+
+		// 检查Redis连接
+		if srv.redisClient != nil {
+			if err := srv.redisClient.HealthCheck(); err != nil {
+				health.Status = "degraded"
+				health.Services["redis"] = "unhealthy"
+			} else {
+				health.Services["redis"] = "healthy"
+			}
+		}
 
 		c.JSON(200, health)
 	})

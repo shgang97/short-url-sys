@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"generate-service/internal/config"
+	"generate-service/internal/pkg/database"
+	linkRepo "generate-service/internal/repository/link"
 	"log"
 	"net/http"
 	"os"
@@ -14,9 +16,12 @@ import (
 )
 
 type Server struct {
-	config *config.Config
-	router http.Handler
-	server *http.Server
+	config      *config.Config
+	router      http.Handler
+	server      *http.Server
+	mysqlDB     *database.MySQLDB
+	redisClient *database.RedisClient
+	linkRepo    linkRepo.Repository
 }
 
 func New(cfg *config.Config) *Server {
@@ -81,7 +86,24 @@ func (s *Server) waitForShutdown() {
 }
 
 func (s *Server) initDatabase() error {
-	// TODO
+	// 初始化MySQL
+	mysqlDB, err := database.NewMySQLDB(&s.config.Database.MySQL)
+	if err != nil {
+		return fmt.Errorf("init mysql failed: %w", err)
+	}
+	s.mysqlDB = mysqlDB
+
+	// 初始化Redis
+	redisClient, err := database.NewRedisClient(&s.config.Redis)
+	if err != nil {
+		return fmt.Errorf("init redis failed: %w", err)
+	}
+	s.redisClient = redisClient
+
+	// 初始化Repository
+	s.linkRepo = linkRepo.NewMySQLRepository(mysqlDB.DB)
+
+	log.Printf("✅ init database success\n")
 	return nil
 }
 
