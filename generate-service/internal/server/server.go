@@ -7,6 +7,8 @@ import (
 	"generate-service/internal/config"
 	"generate-service/internal/pkg/database"
 	linkRepo "generate-service/internal/repository/link"
+	"generate-service/internal/service/idgen"
+	linkService "generate-service/internal/service/link"
 	"log"
 	"net/http"
 	"os"
@@ -22,6 +24,8 @@ type Server struct {
 	mysqlDB     *database.MySQLDB
 	redisClient *database.RedisClient
 	linkRepo    linkRepo.Repository
+	idGenerator idgen.Generator
+	linkSvc     linkService.Service
 }
 
 func New(cfg *config.Config) *Server {
@@ -108,6 +112,22 @@ func (s *Server) initDatabase() error {
 }
 
 func (s *Server) initServices() error {
-	// TODO
+	// 厨师话ID生成器
+	idGenerator, err := idgen.NewIDGenerator(&s.config.IdGenerator, s.redisClient)
+	if err != nil {
+		return fmt.Errorf("init ID Generator failed: %w", err)
+	}
+	s.idGenerator = idGenerator
+
+	// 初始化短链服务
+	s.linkSvc = linkService.NewService(
+		s.linkRepo,
+		s.idGenerator,
+		linkService.Config{
+			BaseURL: s.config.Server.BaseURL,
+		},
+	)
+
+	log.Println("✅ Services initialized successfully")
 	return nil
 }

@@ -85,6 +85,8 @@ github.com/rs/cors/wrapper/gin v0.0.0-20240830163046-1084d89a1692 h1:lwzJgPw5Y6p
 github.com/rs/cors/wrapper/gin v0.0.0-20240830163046-1084d89a1692/go.mod h1:742Ialb8SOs5yB2PqRDzFcyND3280PoaS5/wcKQUQKE=
 github.com/sagikazarmark/locafero v0.11.0 h1:1iurJgmM9G3PA/I+wWYIOw/5SyBtxapeHDcg+AAIFXc=
 github.com/sagikazarmark/locafero v0.11.0/go.mod h1:nVIGvgyzw595SUSUE6tvCp3YYTeHs15MvlmU87WwIik=
+github.com/shgang97/sys-collections/snowflake v0.0.0-20251101181652-0162e3fe7025 h1:ZZMic0zgL9Fj8WMtFliK72nsFQfQh2YQnJmbz2U7PdI=
+github.com/shgang97/sys-collections/snowflake v0.0.0-20251101181652-0162e3fe7025/go.mod h1:sLbud+IJ31p+2lcy/QU/d0fJfsiZW2Mflm/iDsqtkL0=
 github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 h1:+jumHNA0Wrelhe64i8F6HNlS8pkoyMv5sreGx2Ry5Rw=
 github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8/go.mod h1:3n1Cwaq1E1/1lhQhtRK2ts/ZwZEhjcQeJQ1RuC6Q/8U=
 github.com/spf13/afero v1.15.0 h1:b/YBCLWAJdFWJTN9cLhiXXcD7mzKn9Dm86dNnfyQw1I=

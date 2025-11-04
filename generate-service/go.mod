@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/redis/go-redis/v9 v9.16.0
 	github.com/rs/cors/wrapper/gin v0.0.0-20240830163046-1084d89a1692
+	github.com/shgang97/sys-collections/snowflake v0.0.0-20251101181652-0162e3fe7025
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	gorm.io/driver/mysql v1.6.0
