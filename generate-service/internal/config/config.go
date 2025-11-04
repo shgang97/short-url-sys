@@ -51,6 +51,34 @@ type LogConfig struct {
 	ErrorOutputPaths []string `mapstructure:"error_output_paths"`
 }
 
+type KafkaConfig struct {
+	Brokers  []string `mapstructure:"brokers"`
+	Version  string   `mapstructure:"version"`
+	ClientID string   `mapstructure:"client_id"`
+	Producer Producer `mapstructure:"producer"`
+	Net      Net      `mapstructure:"net"`
+}
+
+type Producer struct {
+	RequiredAcks int `mapstructure:"required_acks"` // 对应 sarama.WaitForAll（-1）
+	Compression  int `mapstructure:"compression"`   // 对应 sarama.CompressionSnappy（2）
+	Flush        struct {
+		Frequency time.Duration `mapstructure:"frequency"` // 时间字符串，如 "500ms"
+	} `mapstructure:"flush"`
+	Return struct {
+		Successes bool `mapstructure:"successes"` // 是否返回成功信息
+		Errors    bool `mapstructure:"errors"`    // 是否返回错误信息
+	} `mapstructure:"return"`
+	Retry struct {
+		Max int `mapstructure:"max"` // 最大重试次数
+	} `mapstructure:"retry"`
+	Idempotent bool `mapstructure:"idempotent"` // 是否启用幂等性
+}
+
+type Net struct {
+	MaxOpenRequests int `mapstructure:"max_open_requests"` // 最大并发请求数（幂等性需设为1）
+}
+
 type Config struct {
 	Server      ServerConfig      `mapstructure:"server"`
 	Database    DatabaseConfig    `mapstructure:"database"`
@@ -58,4 +86,5 @@ type Config struct {
 	IdGenerator IDGeneratorConfig `mapstructure:"id_generator"`
 	Cache       CacheConfig       `mapstructure:"cache"`
 	Log         LogConfig         `mapstructure:"log"`
+	Kafka       KafkaConfig       `mapstructure:"kafka"`
 }

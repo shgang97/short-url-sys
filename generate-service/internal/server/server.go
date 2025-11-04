@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"generate-service/internal/config"
 	"generate-service/internal/pkg/database"
+	"generate-service/internal/pkg/mq"
 	linkRepo "generate-service/internal/repository/link"
 	"generate-service/internal/service/idgen"
 	linkService "generate-service/internal/service/link"
@@ -15,17 +16,20 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/IBM/sarama"
 )
 
 type Server struct {
-	config      *config.Config
-	router      http.Handler
-	server      *http.Server
-	mysqlDB     *database.MySQLDB
-	redisClient *database.RedisClient
-	linkRepo    linkRepo.Repository
-	idGenerator idgen.Generator
-	linkSvc     linkService.Service
+	config        *config.Config
+	router        http.Handler
+	server        *http.Server
+	mysqlDB       *database.MySQLDB
+	redisClient   *database.RedisClient
+	linkRepo      linkRepo.Repository
+	idGenerator   idgen.Generator
+	linkSvc       linkService.Service
+	kafkaProducer *mq.KafkaProducer
 }
 
 func New(cfg *config.Config) *Server {
@@ -38,6 +42,11 @@ func (s *Server) Start() error {
 	// 初始化数据库
 	if err := s.initDatabase(); err != nil {
 		return fmt.Errorf("failed to init database: %w", err)
+	}
+
+	// 初始化mq
+	if err := s.initMq(); err != nil {
+		return fmt.Errorf("failed to init mq: %w", err)
 	}
 
 	// 初始化服务
@@ -132,8 +141,29 @@ func (s *Server) initServices() error {
 		linkService.Config{
 			BaseURL: s.config.Server.BaseURL,
 		},
+		s.kafkaProducer,
 	)
 
 	log.Println("✅ Services initialized successfully")
+	return nil
+}
+
+func (s *Server) initMq() error {
+	kafkaConfig := s.config.Kafka
+	cfg := sarama.NewConfig()
+	cfg.Producer.RequiredAcks = sarama.RequiredAcks(kafkaConfig.Producer.RequiredAcks)
+	cfg.Producer.Compression = sarama.CompressionCodec(kafkaConfig.Producer.Compression)
+	cfg.Producer.Flush.Frequency = kafkaConfig.Producer.Flush.Frequency
+	cfg.Producer.Return.Successes = kafkaConfig.Producer.Return.Successes
+	cfg.Producer.Return.Errors = kafkaConfig.Producer.Return.Errors
+	cfg.Producer.Retry.Max = kafkaConfig.Producer.Retry.Max
+	cfg.Producer.Idempotent = kafkaConfig.Producer.Idempotent // 启用幂等性
+	cfg.Net.MaxOpenRequests = kafkaConfig.Net.MaxOpenRequests
+	// 初始化Kafka
+	kp, err := mq.NewKafkaProducer(s.config.Kafka.Brokers, cfg)
+	if err != nil {
+		return fmt.Errorf("init mq failed: %w", err)
+	}
+	s.kafkaProducer = kp
 	return nil
 }

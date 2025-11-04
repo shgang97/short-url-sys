@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"generate-service/internal/model"
 	"generate-service/internal/pkg/errors"
+	"generate-service/internal/pkg/mq"
 	linkRepo "generate-service/internal/repository/link"
 	"generate-service/internal/service/idgen"
-	"log"
 	"time"
 )
 
@@ -17,6 +17,7 @@ type linkService struct {
 	urlValidator  *URLValidator
 	codeGenerator *ShortCodeGenerator
 	baseURL       string
+	kafkaProducer *mq.KafkaProducer
 }
 
 // CreateShortURL 创建短链接
@@ -107,11 +108,8 @@ func (s *linkService) CreateShortURL(ctx context.Context, req *model.CreateShort
 	if err := s.linkRepo.Create(ctx, link); err != nil {
 		return nil, err
 	}
-	// 异步预热缓存
-	go func() {
-		// TODO 发送缓存预热消息
-		log.Printf("发送缓存预热消息")
-	}()
+	// 异步发送缓存预热消息
+	s.sendWarmupAsync(link)
 
 	return link, nil
 }
@@ -131,11 +129,8 @@ func (s *linkService) GetLongURL(ctx context.Context, shortCode string) (string,
 		return "", errors.ErrLinkDisabled
 	}
 
-	// 异步更新缓存
-	go func() {
-		// TODO 发送更新缓存消息
-		log.Printf("发送更新缓存消息")
-	}()
+	// 缓存未命中，需要加入缓存
+	s.sendWarmupAsync(link)
 
 	return link.LongURL, nil
 }
@@ -195,15 +190,11 @@ func (s *linkService) UpdateLink(ctx context.Context, shortCode string, req *mod
 	}
 
 	// 更新缓存
-	go func() {
-		if link.Status == model.LinkStatusActive {
-			// TODO 发送更新缓存消息
-			log.Printf("发送更新缓存消息")
-		} else {
-			// TODO 发送删除缓存消息
-			log.Printf("发送更新缓存消息")
-		}
-	}()
+	if link.Status == model.LinkStatusActive {
+		s.sendCacheUpdateAsync(link)
+	} else {
+		s.sendCacheDeleteAsync(link)
+	}
 	// TODO 远程调用 统计服务获取最后访问时间
 	getLastAccess := time.Now()
 	lastAccess := &getLastAccess
@@ -234,11 +225,8 @@ func (s *linkService) DeleteLink(ctx context.Context, shortCode string) error {
 	if err := s.linkRepo.Delete(ctx, link); err != nil {
 		return err
 	}
-	// 删除缓存
-	go func() {
-		// TODO 发送删除缓存消息
-		log.Printf("发送更新缓存消息")
-	}()
+	// 发送删除缓存消息
+	s.sendCacheDeleteAsync(link)
 	return nil
 }
 
@@ -338,6 +326,7 @@ func NewService(
 	linkRepo linkRepo.Repository,
 	idGenerator idgen.Generator,
 	cfg Config,
+	kp *mq.KafkaProducer,
 ) Service {
 	return &linkService{
 		linkRepo:      linkRepo,
@@ -345,6 +334,7 @@ func NewService(
 		urlValidator:  NewURLValidator(),
 		codeGenerator: NewShortCodeGenerator(),
 		baseURL:       cfg.BaseURL,
+		kafkaProducer: kp,
 	}
 }
 

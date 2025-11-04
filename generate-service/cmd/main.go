@@ -17,6 +17,6 @@ func main() {
 
 	// 启动服务器
 	if err := srv.Start(); err != nil {
-		log.Fatalf("Failed to start api-server: %v", err)
+		log.Fatalf("Failed to start generate-service: %v", err)
 	}
 }
