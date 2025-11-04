@@ -84,7 +84,13 @@ func (s *Server) waitForShutdown() {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 
-	// TODO 关闭数据库连接
+	// 关闭数据库连接
+	if s.mysqlDB != nil {
+		s.mysqlDB.Close()
+	}
+	if s.redisClient != nil {
+		s.redisClient.Close()
+	}
 
 	log.Printf("Server exiting...\n")
 }
