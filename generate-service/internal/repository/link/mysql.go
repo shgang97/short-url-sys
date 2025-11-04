@@ -27,7 +27,7 @@ func (r *MySQLRepository) Create(ctx context.Context, link *model.Link) error {
 
 func (r *MySQLRepository) FindByShortCode(ctx context.Context, shortCode string) (*model.Link, error) {
 	var link model.Link
-	result := r.db.WithContext(ctx).Where("short_code=?", shortCode).First(&link)
+	result := r.db.WithContext(ctx).Where("short_code=? and delete_flag = 'N'", shortCode).First(&link)
 	if result.Error != nil {
 		if result.Error.Error() == gorm.ErrRecordNotFound.Error() {
 			return nil, errors.ErrLinkNotFound
@@ -39,7 +39,7 @@ func (r *MySQLRepository) FindByShortCode(ctx context.Context, shortCode string)
 
 func (r *MySQLRepository) FindByLongURL(ctx context.Context, longURL string) (*model.Link, error) {
 	var link model.Link
-	result := r.db.WithContext(ctx).Where("long_url=?", longURL).First(&link)
+	result := r.db.WithContext(ctx).Where("long_url=? and delete_flag = 'N'", longURL).First(&link)
 	if result.Error != nil {
 		if result.Error.Error() == gorm.ErrRecordNotFound.Error() {
 			return nil, errors.ErrLinkNotFound
@@ -114,6 +114,7 @@ func (r *MySQLRepository) List(ctx context.Context, filter ListFilter, page, pag
 		search := "%" + filter.Search + "%"
 		query = query.Where("short_code LIKE ? OR long_url LIKE ? ", search, search)
 	}
+	query = query.Where("delete_flag = 'N'")
 
 	// 计算总数
 	if err := query.Count(&total).Error; err != nil {
