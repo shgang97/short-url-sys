@@ -3,6 +3,6 @@ go 1.25.1
 use (
     ./generate-service
     ./shared
-	redirect-service
+	./redirect-service
 	./short-url-sys
 )

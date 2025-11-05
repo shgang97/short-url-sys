@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package generate;
+
+option go_package = "../generate;generate";
+
+// 生成服务定义
+service GenerateService {
+  // 获取原始URL
+  rpc GetOriginalUrl(GetOriginalUrlRequest) returns (GetOriginalUrlResponse);
+}
+
+// 获取原始URL请求
+message GetOriginalUrlRequest {
+  string short_code = 1;
+}
+
+// 获取原始URL响应
+message GetOriginalUrlResponse {
+  string original_url = 1;
+  bool exists = 2;
+  bool is_active = 3;
+  string error_message = 4;
+}

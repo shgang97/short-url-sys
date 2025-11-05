@@ -8,22 +8,28 @@ import (
 	"generate-service/internal/pkg/database"
 	"generate-service/internal/pkg/mq"
 	linkRepo "generate-service/internal/repository/link"
+	grpcSrv "generate-service/internal/server/grpc"
 	"generate-service/internal/service/idgen"
 	linkService "generate-service/internal/service/link"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	pb "shared/proto/generate"
 	"syscall"
 	"time"
 
 	"github.com/IBM/sarama"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type Server struct {
 	config        *config.Config
 	router        http.Handler
-	server        *http.Server
+	httpServer    *http.Server
+	grpcServer    *grpc.Server
 	mysqlDB       *database.MySQLDB
 	redisClient   *database.RedisClient
 	linkRepo      linkRepo.Repository
@@ -57,10 +63,31 @@ func (s *Server) Start() error {
 	// 设置路由
 	setupRouter(s.config, s)
 
+	// 创建gRPC服务器
+	grpcConfig := s.config.Server.GRPC
+	opts := []grpc.ServerOption{
+		grpc.MaxConcurrentStreams(grpcConfig.MaxConcurrentStreams),
+		grpc.MaxRecvMsgSize(grpcConfig.MaxRecvMsgSize),
+		grpc.MaxSendMsgSize(grpcConfig.MaxSendMsgSize),
+	}
+	gRPCServer := grpc.NewServer(opts...)
+	// 注册服务
+	generateServer := grpcSrv.NewGenerateServer(s.linkSvc)
+	pb.RegisterGenerateServiceServer(gRPCServer, generateServer)
+	// 启用反射服务
+	reflection.Register(gRPCServer)
+	// 启动gRPC服务器
+	grpcAddr := fmt.Sprintf("%s:%s", grpcConfig.Host, grpcConfig.Port)
+	listener, err := net.Listen("tcp", grpcAddr)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	s.grpcServer = gRPCServer
+
 	// 设置服务器配置
-	serverCfg := s.config.Server
-	addr := fmt.Sprintf("%s:%d", serverCfg.Host, serverCfg.Port)
-	s.server = &http.Server{
+	httpConfig := s.config.Server.HTTP
+	addr := fmt.Sprintf("%s:%d", httpConfig.Host, httpConfig.Port)
+	s.httpServer = &http.Server{
 		Addr:         addr,
 		Handler:      s.router,
 		ReadTimeout:  15 * time.Second,
@@ -70,9 +97,16 @@ func (s *Server) Start() error {
 
 	// 启动服务器
 	go func() {
-		log.Printf("server listening on %s", addr)
-		if err := s.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("Failed to start server: %v", err)
+		log.Printf("HTTPServer listening on %s", addr)
+		if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Failed to start httpServer: %v", err)
+		}
+	}()
+
+	go func() {
+		log.Printf("GRPCServer listening on %s", grpcAddr)
+		if err := gRPCServer.Serve(listener); err != nil {
+			log.Fatalf("failed to serve: %v", err)
 		}
 	}()
 
@@ -86,12 +120,13 @@ func (s *Server) waitForShutdown() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Printf("Shutting down server...\n")
+	log.Printf("Shutting down httpServer...\n")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	if err := s.server.Shutdown(ctx); err != nil {
+	if err := s.httpServer.Shutdown(ctx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
+	s.grpcServer.GracefulStop()
 
 	// 关闭数据库连接
 	if s.mysqlDB != nil {

@@ -12,7 +12,7 @@ import (
 
 func setupRouter(config *config.Config, srv *Server) {
 	// 设置Gin模式
-	gin.SetMode(config.Server.Mode)
+	gin.SetMode(config.Server.HTTP.Mode)
 	router := gin.New()
 
 	// 全局中间件

@@ -5,10 +5,26 @@ import (
 )
 
 type ServerConfig struct {
-	Port    int    `mapstructure:"port"`
-	Host    string `mapstructure:"host"`
-	Mode    string `mapstructure:"mode"`
-	BaseURL string `mapstructure:"base_url"`
+	GRPC    GRPCConfig `mapstructure:"grpc"`
+	HTTP    HTTPConfig `mapstructure:"http"`
+	BaseURL string     `mapstructure:"base_url"`
+}
+
+// HTTPConfig HTTP 服务器配置
+type HTTPConfig struct {
+	Port int    `mapstructure:"port"`
+	Host string `mapstructure:"host"`
+	Mode string `mapstructure:"mode"`
+}
+
+// GRPCConfig gRPC 服务器配置
+type GRPCConfig struct {
+	Host                 string        `mapstructure:"host"`
+	Port                 string        `mapstructure:"port"`
+	MaxConcurrentStreams uint32        `mapstructure:"max_concurrent_streams"`
+	MaxRecvMsgSize       int           `mapstructure:"max_recv_msg_size"`
+	MaxSendMsgSize       int           `mapstructure:"max_send_msg_size"`
+	ConnectionTimeout    time.Duration `mapstructure:"connection_timeout"`
 }
 
 type DatabaseConfig struct {

@@ -1,7 +1,14 @@
 server:
-  port: 8080
-  host: "localhost"
-  mode: "debug"
+  grpc:
+    host: "localhost"
+    port: "50051"
+    max_concurrent_streams: 100
+    max_recv_msg_size: 4194304  # 4MB
+    max_send_msg_size: 4194304  # 4MB
+  http:
+    port: 8080
+    host: "localhost"
+    mode: "debug"
   base_url: "http://localhost:8081"
 
 database:
