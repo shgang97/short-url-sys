@@ -8,15 +8,19 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"redirect-service/internal/client/redis"
 	"redirect-service/internal/config"
+	"redirect-service/internal/repository/cache"
 	"syscall"
 	"time"
 )
 
 type Server struct {
-	config *config.Config
-	router http.Handler
-	server *http.Server
+	config      *config.Config
+	router      http.Handler
+	server      *http.Server
+	redisClient *redis.Client
+	cacheRepo   *cache.Repository
 }
 
 func New(cfg *config.Config) *Server {
@@ -27,8 +31,16 @@ func New(cfg *config.Config) *Server {
 
 func (s *Server) Start() error {
 	// 初始化Redis
+	redisClient, err := redis.NewRedis(&s.config.Redis)
+	if err != nil {
+		return fmt.Errorf("init redis failed: %w", err)
+	}
+	s.redisClient = redisClient
 
 	// 初始化KafkaProducer
+
+	// 初始化Repository
+	s.cacheRepo = cache.NewRepository(redisClient.Client, &s.config.Cache)
 
 	// 设置路由
 	setupRouter(s.config, s)
@@ -69,5 +81,9 @@ func (s *Server) waitForShutdown() {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 
+	// 关闭Redis连接
+	if s.redisClient != nil {
+		s.redisClient.Close()
+	}
 	log.Printf("Server exiting...\n")
 }

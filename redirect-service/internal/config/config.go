@@ -14,6 +14,11 @@ type RedisConfig struct {
 	MinIdleConns int    `mapstructure:"min_idle_conns"`
 }
 
+type CacheConfig struct {
+	TTL    int    `mapstructure:"ttl"`
+	Prefix string `mapstructure:"prefix"`
+}
+
 type KafkaConfig struct {
 	Brokers  []string `mapstructure:"brokers"`
 	ClientID string   `mapstructure:"client_id"`
@@ -31,4 +36,5 @@ type Config struct {
 	Server ServerConfig `mapstructure:"server"`
 	Redis  RedisConfig  `mapstructure:"redis"`
 	Kafka  KafkaConfig  `mapstructure:"kafka"`
+	Cache  CacheConfig  `mapstructure:"cache"`
 }

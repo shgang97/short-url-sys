@@ -1,7 +1,9 @@
 package server
 
 import (
+	"net/http"
 	"redirect-service/internal/config"
+	"shared/model"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,11 +20,23 @@ func setupRouter(config *config.Config, srv *Server) {
 
 	// 健康检查点
 	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":    "ok",
-			"service":   "redirect",
-			"timestamp": time.Now().Unix(),
-		})
+		now := time.Now()
+		healthRsp := model.HealthResponse{
+			Status:    "OK",
+			Datetime:  now.Format("2006-01-02 15:04:05.000"),
+			Timestamp: now.Unix(),
+			Services:  make(map[string]string),
+		}
+		// 检查Redis连接
+		if srv.redisClient != nil {
+			if err := srv.redisClient.HealthCheck(); err != nil {
+				healthRsp.Status = "degraded"
+				healthRsp.Services["redis"] = "unhealthy"
+			} else {
+				healthRsp.Services["redis"] = "healthy"
+			}
+		}
+		c.JSON(http.StatusOK, healthRsp)
 	})
 
 	api := router.Group("/api/v1")
