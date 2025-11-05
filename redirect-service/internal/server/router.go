@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 	"redirect-service/internal/config"
+	"redirect-service/internal/handler"
 	"shared/model"
 	"time"
 
@@ -17,6 +18,9 @@ func setupRouter(config *config.Config, srv *Server) {
 	// 全局中间件
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+
+	// 初始化处理器
+	redirectHandler := handler.NewRedirectHandler(*srv.redirectSvc)
 
 	// 健康检查点
 	router.GET("/health", func(c *gin.Context) {
@@ -38,6 +42,9 @@ func setupRouter(config *config.Config, srv *Server) {
 		}
 		c.JSON(http.StatusOK, healthRsp)
 	})
+
+	// 重定向路由
+	router.GET("/:code", redirectHandler.Redirect)
 
 	api := router.Group("/api/v1")
 

@@ -31,8 +31,8 @@ func (r *Repository) getKey(typ string, id string) string {
 	return fmt.Sprintf("%s:%s:%s", r.prefix, typ, id)
 }
 
-// GetShortURL 从 Redis 缓存获取短链映射
-func (r *Repository) GetShortURL(ctx context.Context, shortCode string) (string, error) {
+// GetOriginalURL 从 Redis 缓存获取短链映射
+func (r *Repository) GetOriginalURL(ctx context.Context, shortCode string) (string, error) {
 	key := r.getKey("url", shortCode)
 	result, err := r.client.Get(ctx, key).Result()
 	if err != nil {

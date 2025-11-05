@@ -8,9 +8,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"redirect-service/internal/client/grpc/generate"
 	"redirect-service/internal/client/redis"
 	"redirect-service/internal/config"
 	"redirect-service/internal/repository/cache"
+	redirectService "redirect-service/internal/service/redirect"
 	"syscall"
 	"time"
 )
@@ -21,6 +23,8 @@ type Server struct {
 	server      *http.Server
 	redisClient *redis.Client
 	cacheRepo   *cache.Repository
+	redirectSvc *redirectService.Service
+	genClient   *generate.Client
 }
 
 func New(cfg *config.Config) *Server {
@@ -41,6 +45,16 @@ func (s *Server) Start() error {
 
 	// 初始化Repository
 	s.cacheRepo = cache.NewRepository(redisClient.Client, &s.config.Cache)
+
+	// 初始化 generate-service 客户端
+	genClient, err := generate.NewClient(&s.config.GenerateService)
+	if err != nil {
+		return fmt.Errorf("init generate client failed: %w", err)
+	}
+	s.genClient = genClient
+
+	// 初始化重定向服务
+	s.redirectSvc = redirectService.NewService(s.genClient, s.cacheRepo)
 
 	// 设置路由
 	setupRouter(s.config, s)

@@ -8,6 +8,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type GenerateServer struct {
@@ -28,14 +29,17 @@ func (s *GenerateServer) GetOriginalUrl(ctx context.Context, req *pb.GetOriginal
 	}
 
 	// 调用业务服务
-	longUrl, err := s.linkService.GetLongURL(ctx, req.ShortCode)
+	lk, err := s.linkService.GetLink(ctx, req.ShortCode)
 	if err != nil {
 		return nil, status.Error(codes.Canceled, err.Error())
 	}
-	return &pb.GetOriginalUrlResponse{
-		OriginalUrl:  longUrl,
-		Exists:       true,
+	resp := &pb.GetOriginalUrlResponse{
+		OriginalUrl:  lk.LongURL,
 		IsActive:     true,
 		ErrorMessage: "",
-	}, nil
+	}
+	if lk.ExpiresAt != nil && !lk.ExpiresAt.IsZero() {
+		resp.ExpireTime = timestamppb.New(*lk.ExpiresAt)
+	}
+	return resp, nil
 }

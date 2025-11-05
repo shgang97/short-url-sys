@@ -8,6 +8,10 @@ redis:
   password: ""
   db: 0
 
+cache:
+  ttl: 3600
+  prefix: "short-link"
+
 kafka:
   brokers:
     - "localhost:9092"
@@ -18,3 +22,8 @@ kafka:
     topics:
       - ""
     auto_offset: ""
+
+generate_service:
+  enabled: true
+  address: "localhost:50051"
+  timeout: "5s"

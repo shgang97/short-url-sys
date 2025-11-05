@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 type ServerConfig struct {
 	Port int    `mapstructure:"port"`
 	Host string `mapstructure:"host"`
@@ -32,9 +34,16 @@ type Consumer struct {
 	AutoOffset string   `mapstructure:"auto_offset"`
 }
 
+// GenerateService generate-service 客户端配置
+type GenerateService struct {
+	Address string        `mapstructure:"address"`
+	Timeout time.Duration `mapstructure:"timeout"`
+}
+
 type Config struct {
-	Server ServerConfig `mapstructure:"server"`
-	Redis  RedisConfig  `mapstructure:"redis"`
-	Kafka  KafkaConfig  `mapstructure:"kafka"`
-	Cache  CacheConfig  `mapstructure:"cache"`
+	Server          ServerConfig    `mapstructure:"server"`
+	Redis           RedisConfig     `mapstructure:"redis"`
+	Kafka           KafkaConfig     `mapstructure:"kafka"`
+	Cache           CacheConfig     `mapstructure:"cache"`
+	GenerateService GenerateService `mapstructure:"generate_service"`
 }

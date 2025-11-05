@@ -114,25 +114,22 @@ func (s *linkService) CreateShortURL(ctx context.Context, req *model.CreateShort
 	return link, nil
 }
 
-// GetLongURL 获取长链接（用于重定向）
-func (s *linkService) GetLongURL(ctx context.Context, shortCode string) (string, error) {
+// GetLink 获取长链接（用于重定向）
+func (s *linkService) GetLink(ctx context.Context, shortCode string) (*model.Link, error) {
 	// 直接从数据库获取
 	link, err := s.linkRepo.FindByShortCode(ctx, shortCode)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	// 检查链接状态
 	if !link.IsActive() {
 		if link.Status == model.LinkStatusExpired {
-			return "", errors.ErrLinkExpired
+			return nil, errors.ErrLinkExpired
 		}
-		return "", errors.ErrLinkDisabled
+		return nil, errors.ErrLinkDisabled
 	}
 
-	// 缓存未命中，需要加入缓存
-	s.sendWarmupAsync(link)
-
-	return link.LongURL, nil
+	return link, nil
 }
 
 // GetLinkInfo 获取链接信息
