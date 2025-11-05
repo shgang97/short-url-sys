@@ -1,0 +1,20 @@
+server:
+  port: 6060
+  host: "localhost"
+  mode: "debug"
+
+redis:
+  addr: "localhost:6379"
+  password: ""
+  db: 0
+
+kafka:
+  brokers:
+    - "localhost:9092"
+  client_id: "generate-service"   # 客户端标识
+  version:
+  consumer:
+    group_id: ""
+    topics:
+      - ""
+    auto_offset: ""
