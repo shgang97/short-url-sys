@@ -4,7 +4,7 @@ import "time"
 
 // ClickEvent 点击事件表模型
 type ClickEvent struct {
-	ID          int64     `gorm:"column:id;primaryKey;type:bigint" json:"id"`
+	ID          uint64    `gorm:"column:id;primaryKey;type:bigint unsigned" json:"id,string"`
 	ShortCode   string    `gorm:"column:short_code;type:varchar(20);not null;comment:短链码" json:"short_code"`
 	OriginalURL string    `gorm:"column:original_url;type:varchar(2048);not null;comment:原始URL" json:"original_url"`
 	IP          string    `gorm:"column:ip;type:varchar(45);not null;comment:客户端IP" json:"ip"`

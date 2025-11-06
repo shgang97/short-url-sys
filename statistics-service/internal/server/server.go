@@ -9,10 +9,12 @@ import (
 	"os"
 	"os/signal"
 	"statistics-service/internal/config"
+	"statistics-service/internal/consumer"
 	"statistics-service/internal/pkg/database"
 	"statistics-service/internal/pkg/idgen"
 	"statistics-service/internal/pkg/logger"
 	clickRepo "statistics-service/internal/repository/click"
+	clickService "statistics-service/internal/service/click"
 	detector "statistics-service/internal/service/device_detector"
 	"syscall"
 	"time"
@@ -26,6 +28,7 @@ type Server struct {
 	router    http.Handler
 	mysqlDB   *database.MySQLDB
 	clickRepo clickRepo.Repository
+	clickSvc  *clickService.Service
 	generator idgen.Generator
 	detector  detector.DeviceDetector
 }
@@ -57,6 +60,27 @@ func (s *Server) Start() error {
 
 	// 初始化 Repository
 	s.initRepository()
+
+	// 初始化 Service
+	s.initService()
+
+	// 初始化 MessageHandler 并注册到 HandlerRouter
+	router := consumer.NewHandlerRouter()
+	for _, topic := range s.config.Kafka.Topics {
+		h, err := consumer.CreatHandler(topic, s.clickSvc)
+		if err != nil {
+			logger.Logger.Error("Failed to create MessageHandler", zap.String("topic", topic), zap.Error(err))
+		} else {
+			router.Register(topic, h)
+		}
+	}
+
+	// 初始化KafkaConsumer
+	kafkaConsumer, err := consumer.NewKafkaConsumer(&s.config.Kafka, s.clickSvc, router)
+	if err != nil {
+		return fmt.Errorf("init kafka consumer failed: %v", err)
+	}
+	go kafkaConsumer.Start()
 
 	// 设置路由
 	setupRouter(s.config, s)
@@ -100,4 +124,13 @@ func (s *Server) waitForShutdown() {
 
 func (s *Server) initRepository() {
 	s.clickRepo = clickRepo.NewMySQLRepository(s.mysqlDB.DB)
+}
+
+func (s *Server) initService() {
+	s.clickSvc = clickService.NewService(
+		s.mysqlDB.DB,
+		s.clickRepo,
+		s.generator,
+		s.detector,
+	)
 }

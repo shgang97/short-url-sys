@@ -4,7 +4,7 @@ USE short_url;
 
 -- 点击事件明细表
 CREATE TABLE IF NOT EXISTS click_events (
-    id BIGINT PRIMARY KEY,
+    id BIGINT UNSIGNED PRIMARY KEY,
     short_code VARCHAR(20) NOT NULL COMMENT '短链码',
     original_url VARCHAR(2048) NOT NULL COMMENT '原始URL',
     ip VARCHAR(45) NOT NULL COMMENT '客户端IP',
