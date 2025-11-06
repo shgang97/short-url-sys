@@ -13,6 +13,7 @@ import (
 	"statistics-service/internal/pkg/idgen"
 	"statistics-service/internal/pkg/logger"
 	clickRepo "statistics-service/internal/repository/click"
+	detector "statistics-service/internal/service/device_detector"
 	"syscall"
 	"time"
 
@@ -26,6 +27,7 @@ type Server struct {
 	mysqlDB   *database.MySQLDB
 	clickRepo clickRepo.Repository
 	generator idgen.Generator
+	detector  detector.DeviceDetector
 }
 
 func New(cfg *config.Config) *Server {
@@ -42,6 +44,9 @@ func (s *Server) Start() error {
 	// 初始化 IDGenerator
 	generator := idgen.NewSfGenerator(&s.config.Generator.Sonyflake)
 	s.generator = generator
+
+	// 初始化设备检测器 DeviceDetector
+	s.detector = detector.NewDefaultDeviceDetector()
 
 	// 初始化 MySQL
 	sqldb, err := database.NewMySQLDB(s.config.MySQL)
