@@ -28,6 +28,15 @@ func setupRouter(cfg *config.Config, srv *Server) {
 			Timestamp: now.Unix(),
 			Services:  make(map[string]string),
 		}
+		// 检查MySQL连接
+		if srv.mysqlDB != nil {
+			if err := srv.mysqlDB.HealthCheck(); err != nil {
+				healthRsp.Status = "degraded"
+				healthRsp.Services["mysql"] = "unhealthy"
+			} else {
+				healthRsp.Services["mysql"] = "healthy"
+			}
+		}
 		c.JSON(http.StatusOK, healthRsp)
 	})
 

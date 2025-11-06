@@ -11,3 +11,9 @@ log:
   max_backups: 5
   max_age: 7
   compress: false
+
+mysql:
+  dsn: "appuser:apppass@tcp(localhost:3306)/short_url?charset=utf8mb4&parseTime=True&loc=Local"
+  max_idle_conns: 5
+  max_open_conns: 20
+  log_level: 4
