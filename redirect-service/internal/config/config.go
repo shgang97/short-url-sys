@@ -22,16 +22,20 @@ type CacheConfig struct {
 }
 
 type KafkaConfig struct {
-	Brokers  []string `mapstructure:"brokers"`
-	ClientID string   `mapstructure:"client_id"`
-	version  string   `mapstructure:"version"`
-	Consumer Consumer `mapstructure:"consumer"`
+	Brokers       []string `mapstructure:"brokers"`
+	ClientID      string   `mapstructure:"client_id"`
+	Version       string   `mapstructure:"version"`
+	GroupID       string   `mapstructure:"group_id"`
+	Topics        []string `mapstructure:"topics"`
+	FetchMaxBytes int32    `mapstructure:"fetch_max_bytes"`
+	Consumer      Consumer `mapstructure:"consumer"`
 }
 
 type Consumer struct {
-	GroupID    string   `mapstructure:"group_id"`
-	Topics     []string `mapstructure:"topics"`
-	AutoOffset string   `mapstructure:"auto_offset"`
+	AutoCommit         bool          `mapstructure:"auto_commit"`
+	AutoCommitInterval int64         `mapstructure:"auto_commit_interval"`
+	AutoOffset         string        `mapstructure:"auto_offset"`
+	SessionTimeout     time.Duration `mapstructure:"session_timeout"`
 }
 
 // GenerateService generate-service 客户端配置

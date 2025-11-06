@@ -11,20 +11,24 @@ import (
 	"redirect-service/internal/client/grpc/generate"
 	"redirect-service/internal/client/redis"
 	"redirect-service/internal/config"
+	"redirect-service/internal/consumer"
 	"redirect-service/internal/repository/cache"
+	cacheService "redirect-service/internal/service/cache"
 	redirectService "redirect-service/internal/service/redirect"
 	"syscall"
 	"time"
 )
 
 type Server struct {
-	config      *config.Config
-	router      http.Handler
-	server      *http.Server
-	redisClient *redis.Client
-	cacheRepo   *cache.Repository
-	redirectSvc *redirectService.Service
-	genClient   *generate.Client
+	config        *config.Config
+	router        http.Handler
+	server        *http.Server
+	redisClient   *redis.Client
+	cacheRepo     *cache.Repository
+	redirectSvc   *redirectService.Service
+	CacheSvc      *cacheService.Service
+	genClient     *generate.Client
+	KafkaConsumer *consumer.KafkaConsumer
 }
 
 func New(cfg *config.Config) *Server {
@@ -41,8 +45,6 @@ func (s *Server) Start() error {
 	}
 	s.redisClient = redisClient
 
-	// 初始化KafkaProducer
-
 	// 初始化Repository
 	s.cacheRepo = cache.NewRepository(redisClient.Client, &s.config.Cache)
 
@@ -55,6 +57,26 @@ func (s *Server) Start() error {
 
 	// 初始化重定向服务
 	s.redirectSvc = redirectService.NewService(s.genClient, s.cacheRepo)
+	// 初始化缓存服务
+	s.CacheSvc = cacheService.NewService(s.cacheRepo)
+
+	// 初始化 MessageHandler 并注册到 HandlerRouter
+	router := consumer.NewHandlerRouter()
+	for _, topic := range s.config.Kafka.Topics {
+		h, err := consumer.CreateHandler(topic, s.CacheSvc)
+		if err != nil {
+			log.Printf("create kafka handler failed: %v", err)
+		} else {
+			router.Register(topic, h)
+		}
+	}
+
+	// 初始化KafkaProducer
+	kafkaConsumer, err := consumer.NewKafkaConsumer(&s.config.Kafka, s.CacheSvc, router)
+	if err != nil {
+		return fmt.Errorf("init kafka consumer failed: %w", err)
+	}
+	go kafkaConsumer.Start()
 
 	// 设置路由
 	setupRouter(s.config, s)
@@ -97,6 +119,10 @@ func (s *Server) waitForShutdown() {
 
 	// 关闭Redis连接
 	if s.redisClient != nil {
+		s.redisClient.Close()
+	}
+	// 关闭Kafka
+	if s.KafkaConsumer != nil {
 		s.redisClient.Close()
 	}
 	log.Printf("Server exiting...\n")
