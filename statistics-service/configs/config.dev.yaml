@@ -17,3 +17,8 @@ mysql:
   max_idle_conns: 5
   max_open_conns: 20
   log_level: 4
+
+id_generator:
+  type: "sonyflake"
+  sonyflake:
+    node_id: 1

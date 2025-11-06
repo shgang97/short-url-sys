@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"statistics-service/internal/config"
 	"statistics-service/internal/pkg/database"
+	"statistics-service/internal/pkg/idgen"
 	"statistics-service/internal/pkg/logger"
 	clickRepo "statistics-service/internal/repository/click"
 	"syscall"
@@ -24,6 +25,7 @@ type Server struct {
 	router    http.Handler
 	mysqlDB   *database.MySQLDB
 	clickRepo clickRepo.Repository
+	generator idgen.Generator
 }
 
 func New(cfg *config.Config) *Server {
@@ -36,6 +38,10 @@ func (s *Server) Start() error {
 		log.Fatalf("Failed to initialize logger: %v", err)
 	}
 	defer logger.Sync()
+
+	// 初始化 IDGenerator
+	generator := idgen.NewSfGenerator(&s.config.Generator.Sonyflake)
+	s.generator = generator
 
 	// 初始化 MySQL
 	sqldb, err := database.NewMySQLDB(s.config.MySQL)

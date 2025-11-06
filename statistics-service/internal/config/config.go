@@ -2,6 +2,7 @@ package config
 
 import (
 	"statistics-service/internal/pkg/database"
+	"statistics-service/internal/pkg/idgen"
 	"statistics-service/internal/pkg/logger"
 )
 
@@ -15,4 +16,5 @@ type Config struct {
 	Server ServerConfig         `mapstructure:"server"`
 	Log    logger.Config        `mapstructure:"log"`
 	MySQL  database.MySQLConfig `mapstructure:"mysql"`
+	Generator idgen.GeneratorConfig `mapstructure:"id_generator"`
 }
