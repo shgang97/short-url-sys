@@ -1,0 +1,13 @@
+server:
+  port: 5050
+  host: "localhost"
+  mode: "debug"
+
+# 日志配置
+log:
+  level: "debug"
+  file_path: "./logs/app.dev.log"
+  max_size: 50
+  max_backups: 5
+  max_age: 7
+  compress: false

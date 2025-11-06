@@ -1,0 +1,13 @@
+server:
+  port: 5050
+  host: "localhost"
+  mode: "debug"
+
+# 日志配置
+log:
+  level: "info"           # debug, info, warn, error, fatal
+  file_path: "" # 开发环境只输出到控制台
+  max_size: 100           # MB
+  max_backups: 10
+  max_age: 30             # 天
+  compress: true

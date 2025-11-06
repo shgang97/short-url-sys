@@ -5,4 +5,5 @@ use (
     ./shared
 	./redirect-service
 	./short-url-sys
+	./statistics-service
 )
