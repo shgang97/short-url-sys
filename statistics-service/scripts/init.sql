@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS click_events (
     ip VARCHAR(45) NOT NULL COMMENT '客户端IP',
     user_agent TEXT COMMENT '用户代理',
     referer VARCHAR(512) COMMENT '来源页面',
-    country VARCHAR(2) COMMENT '国家代码(ISO 3166-1 alpha-2)';
+    country VARCHAR(2) COMMENT '国家代码(ISO 3166-1 alpha-2)',
     region VARCHAR(100) COMMENT '地区',
     city VARCHAR(100) COMMENT '城市',
     device_type ENUM('desktop', 'mobile', 'tablet', 'bot', 'other') COMMENT '设备类型',
@@ -24,5 +24,5 @@ CREATE TABLE IF NOT EXISTS click_events (
     description VARCHAR(100),
     delete_flag varchar(1) DEFAULT 'N',
     version INT UNSIGNED DEFAULT 0,
-    INDEX idx_short_code_time (short_code, click_time),
+    INDEX idx_short_code_time (short_code, click_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='点击事件明细表';
