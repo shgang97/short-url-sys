@@ -70,3 +70,12 @@ kafka:
   net:
     # 最大并发请求数（幂等性要求需设为1）
     max_open_requests: 1
+
+etcd:
+  endpoints:
+    - "localhost:2379"
+  register:
+    service_name: generate-service
+    addr: localhost:50051
+    ttl: 30
+    dial_timeout: 10

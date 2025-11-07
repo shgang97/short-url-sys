@@ -1,6 +1,7 @@
 package config
 
 import (
+	"generate-service/internal/service/register"
 	"time"
 )
 
@@ -96,11 +97,12 @@ type Net struct {
 }
 
 type Config struct {
-	Server      ServerConfig      `mapstructure:"server"`
-	Database    DatabaseConfig    `mapstructure:"database"`
-	Redis       RedisConfig       `mapstructure:"redis"`
-	IdGenerator IDGeneratorConfig `mapstructure:"id_generator"`
-	Cache       CacheConfig       `mapstructure:"cache"`
-	Log         LogConfig         `mapstructure:"log"`
-	Kafka       KafkaConfig       `mapstructure:"kafka"`
+	Server      ServerConfig        `mapstructure:"server"`
+	Database    DatabaseConfig      `mapstructure:"database"`
+	Redis       RedisConfig         `mapstructure:"redis"`
+	IdGenerator IDGeneratorConfig   `mapstructure:"id_generator"`
+	Cache       CacheConfig         `mapstructure:"cache"`
+	Log         LogConfig           `mapstructure:"log"`
+	Kafka       KafkaConfig         `mapstructure:"kafka"`
+	Etcd        register.EtcdConfig `mapstructure:"etcd"`
 }

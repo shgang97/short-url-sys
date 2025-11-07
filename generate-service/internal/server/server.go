@@ -11,6 +11,7 @@ import (
 	grpcSrv "generate-service/internal/server/grpc"
 	"generate-service/internal/service/idgen"
 	linkService "generate-service/internal/service/link"
+	"generate-service/internal/service/register"
 	"log"
 	"net"
 	"net/http"
@@ -84,6 +85,14 @@ func (s *Server) Start() error {
 	}
 	s.grpcServer = gRPCServer
 
+	// gRPC 服务端注册到 ETCD
+	reg, err := register.NewServiceRegister(&s.config.Etcd)
+	if err != nil {
+		log.Fatalf("failed to init register service: %w", err)
+	}
+	// 监听续租
+	go reg.ListenKeepAlive(s.config.Etcd.Register.Ttl)
+
 	// 设置服务器配置
 	httpConfig := s.config.Server.HTTP
 	addr := fmt.Sprintf("%s:%d", httpConfig.Host, httpConfig.Port)
@@ -134,6 +143,9 @@ func (s *Server) waitForShutdown() {
 	}
 	if s.redisClient != nil {
 		s.redisClient.Close()
+	}
+	if s.kafkaProducer != nil {
+		s.kafkaProducer.Close()
 	}
 
 	log.Printf("Server exiting...\n")
