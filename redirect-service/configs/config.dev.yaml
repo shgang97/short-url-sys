@@ -23,11 +23,30 @@ kafka:
     - "short-link-cache-update"
     - "short-link-cache-delete"
   fetch_max_bytes: 1048576
+  net_max_open_requests: 1
   consumer:
     auto_commit: true
     auto_commit_interval: 3600
     auto_offset: "earliest"
     session_timeout: 30s
+  producer:
+    # 对应 sarama.WaitForAll（常量值为-1）
+    required_acks: -1
+    # 对应 sarama.CompressionSnappy（常量值为2）
+    compression: 2
+    flush:
+      # 刷新频率：500毫秒
+      frequency: "500ms"
+    return:
+      # 是否返回成功信息
+      successes: true
+      # 是否返回错误信息
+      errors: true
+    retry:
+      # 最大重试次数
+      max: 3
+    # 是否启用幂等性
+    idempotent: true
 
 generate_service:
   enabled: true

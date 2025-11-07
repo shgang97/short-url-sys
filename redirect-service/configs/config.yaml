@@ -34,8 +34,27 @@ kafka:
     - "localhost:9092"
   client_id: "generate-service"   # 客户端标识
   version:
+  net_max_open_requests: 1
   consumer:
     group_id: ""
     topics:
       - ""
     auto_offset: ""
+  producer:
+    # 对应 sarama.WaitForAll（常量值为-1）
+    required_acks: -1
+    # 对应 sarama.CompressionSnappy（常量值为2）
+    compression: 2
+    flush:
+      # 刷新频率：500毫秒
+      frequency: "500ms"
+    return:
+      # 是否返回成功信息
+      successes: true
+      # 是否返回错误信息
+      errors: true
+    retry:
+      # 最大重试次数
+      max: 3
+    # 是否启用幂等性
+    idempotent: true

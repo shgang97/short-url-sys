@@ -12,6 +12,7 @@ import (
 	"redirect-service/internal/client/redis"
 	"redirect-service/internal/config"
 	"redirect-service/internal/consumer"
+	"redirect-service/internal/producer"
 	"redirect-service/internal/repository/cache"
 	cacheService "redirect-service/internal/service/cache"
 	redirectService "redirect-service/internal/service/redirect"
@@ -28,7 +29,8 @@ type Server struct {
 	redirectSvc   *redirectService.Service
 	CacheSvc      *cacheService.Service
 	genClient     *generate.Client
-	KafkaConsumer *consumer.KafkaConsumer
+	kafkaConsumer *consumer.KafkaConsumer
+	kafkaProducer *producer.KafkaProducer
 }
 
 func New(cfg *config.Config) *Server {
@@ -71,12 +73,21 @@ func (s *Server) Start() error {
 		}
 	}
 
-	// 初始化KafkaProducer
+	// 初始化KafkaConsumer
 	kafkaConsumer, err := consumer.NewKafkaConsumer(&s.config.Kafka, s.CacheSvc, router)
 	if err != nil {
 		return fmt.Errorf("init kafka consumer failed: %w", err)
 	}
+	s.kafkaConsumer = kafkaConsumer
 	go kafkaConsumer.Start()
+
+	// 初始化 KafkaProducer 并启动
+	kafkaProducer, err := producer.NewKafkaProducer(s.config.Kafka.Brokers, &s.config.Kafka)
+	if err != nil {
+		return fmt.Errorf("init kafka producer failed: %w", err)
+	}
+	s.kafkaProducer = kafkaProducer
+	go kafkaProducer.Start()
 
 	// 设置路由
 	setupRouter(s.config, s)
@@ -122,8 +133,12 @@ func (s *Server) waitForShutdown() {
 		s.redisClient.Close()
 	}
 	// 关闭Kafka
-	if s.KafkaConsumer != nil {
+	if s.kafkaConsumer != nil {
 		s.redisClient.Close()
+	}
+	// 关闭KafkaProducer
+	if s.kafkaProducer != nil {
+		s.kafkaProducer.Close()
 	}
 	log.Printf("Server exiting...\n")
 }

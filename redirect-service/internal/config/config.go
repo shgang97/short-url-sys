@@ -22,13 +22,15 @@ type CacheConfig struct {
 }
 
 type KafkaConfig struct {
-	Brokers       []string `mapstructure:"brokers"`
-	ClientID      string   `mapstructure:"client_id"`
-	Version       string   `mapstructure:"version"`
-	GroupID       string   `mapstructure:"group_id"`
-	Topics        []string `mapstructure:"topics"`
-	FetchMaxBytes int32    `mapstructure:"fetch_max_bytes"`
-	Consumer      Consumer `mapstructure:"consumer"`
+	Brokers            []string `mapstructure:"brokers"`
+	ClientID           string   `mapstructure:"client_id"`
+	Version            string   `mapstructure:"version"`
+	GroupID            string   `mapstructure:"group_id"`
+	Topics             []string `mapstructure:"topics"`
+	FetchMaxBytes      int32    `mapstructure:"fetch_max_bytes"`
+	Consumer           Consumer `mapstructure:"consumer"`
+	Producer           Producer `mapstructure:"producer"`
+	NetMaxOpenRequests int      `mapstructure:"net_max_open_requests"`
 }
 
 type Consumer struct {
@@ -36,6 +38,22 @@ type Consumer struct {
 	AutoCommitInterval int64         `mapstructure:"auto_commit_interval"`
 	AutoOffset         string        `mapstructure:"auto_offset"`
 	SessionTimeout     time.Duration `mapstructure:"session_timeout"`
+}
+
+type Producer struct {
+	RequiredAcks int `mapstructure:"required_acks"` // 对应 sarama.WaitForAll（-1）
+	Compression  int `mapstructure:"compression"`   // 对应 sarama.CompressionSnappy（2）
+	Flush        struct {
+		Frequency time.Duration `mapstructure:"frequency"` // 时间字符串，如 "500ms"
+	} `mapstructure:"flush"`
+	Return struct {
+		Successes bool `mapstructure:"successes"` // 是否返回成功信息
+		Errors    bool `mapstructure:"errors"`    // 是否返回错误信息
+	} `mapstructure:"return"`
+	Retry struct {
+		Max int `mapstructure:"max"` // 最大重试次数
+	} `mapstructure:"retry"`
+	Idempotent bool `mapstructure:"idempotent"` // 是否启用幂等性
 }
 
 // GenerateService generate-service 客户端配置
