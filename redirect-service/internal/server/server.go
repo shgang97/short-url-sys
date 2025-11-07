@@ -12,9 +12,11 @@ import (
 	"redirect-service/internal/client/redis"
 	"redirect-service/internal/config"
 	"redirect-service/internal/consumer"
+	"redirect-service/internal/pkg/idgen"
 	"redirect-service/internal/producer"
 	"redirect-service/internal/repository/cache"
 	cacheService "redirect-service/internal/service/cache"
+	"redirect-service/internal/service/geoip"
 	redirectService "redirect-service/internal/service/redirect"
 	"syscall"
 	"time"
@@ -31,6 +33,8 @@ type Server struct {
 	genClient     *generate.Client
 	kafkaConsumer *consumer.KafkaConsumer
 	kafkaProducer *producer.KafkaProducer
+	geoIPSvc      geoip.Service
+	generator     idgen.Generator
 }
 
 func New(cfg *config.Config) *Server {
@@ -47,8 +51,19 @@ func (s *Server) Start() error {
 	}
 	s.redisClient = redisClient
 
+	// 初始化 IDGenerator
+	generator := idgen.NewSfGenerator(&s.config.Generator.Sonyflake)
+	s.generator = generator
+
 	// 初始化Repository
 	s.cacheRepo = cache.NewRepository(redisClient.Client, &s.config.Cache)
+
+	// 初始化 GeoIPService
+	geoIPSvc, err := geoip.New(s.config.GeoIP.DBPath)
+	if err != nil {
+		return fmt.Errorf("init geoip failed: %w", err)
+	}
+	s.geoIPSvc = geoIPSvc
 
 	// 初始化 generate-service 客户端
 	genClient, err := generate.NewClient(&s.config.GenerateService)
@@ -57,8 +72,6 @@ func (s *Server) Start() error {
 	}
 	s.genClient = genClient
 
-	// 初始化重定向服务
-	s.redirectSvc = redirectService.NewService(s.genClient, s.cacheRepo)
 	// 初始化缓存服务
 	s.CacheSvc = cacheService.NewService(s.cacheRepo)
 
@@ -88,6 +101,15 @@ func (s *Server) Start() error {
 	}
 	s.kafkaProducer = kafkaProducer
 	go kafkaProducer.Start()
+
+	// 初始化重定向服务
+	s.redirectSvc = redirectService.NewService(
+		s.genClient,
+		s.cacheRepo,
+		s.kafkaProducer,
+		s.geoIPSvc,
+		s.generator,
+	)
 
 	// 设置路由
 	setupRouter(s.config, s)

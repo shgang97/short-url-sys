@@ -11,8 +11,8 @@ redis:
   min_idle_conns: 5
 
 id_generator:
-  type: "snowflake"
-  snowflake:
+  type: "sonyflake"
+  sonyflake:
     node_id: 1
 
 cache:
@@ -58,3 +58,6 @@ kafka:
       max: 3
     # 是否启用幂等性
     idempotent: true
+
+geo_ip:
+  db_path:

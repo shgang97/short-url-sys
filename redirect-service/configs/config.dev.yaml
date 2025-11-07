@@ -8,6 +8,11 @@ redis:
   password: ""
   db: 0
 
+id_generator:
+  type: "sonyflake"
+  sonyflake:
+    node_id: 1
+
 cache:
   ttl: 3600
   prefix: "short-link"
@@ -52,3 +57,6 @@ generate_service:
   enabled: true
   address: "localhost:50051"
   timeout: "5s"
+
+geo_ip:
+  db_path:

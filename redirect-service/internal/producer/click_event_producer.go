@@ -1,9 +1,13 @@
 package producer
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"redirect-service/internal/config"
+	"shared/message"
 	"sync"
+	"time"
 
 	"github.com/IBM/sarama"
 )
@@ -64,6 +68,38 @@ func (kp *KafkaProducer) Start() {
 func (kp *KafkaProducer) Close() error {
 	if kp.producer != nil {
 		return kp.producer.Close()
+	}
+	return nil
+}
+
+func (kp *KafkaProducer) SendClickMessage(topic string, message *message.ClickEventMessage) error {
+	// 序列化消息
+	messageBytes, err := json.Marshal(message)
+	if err != nil {
+		log.Printf("Error marshalling click message: %v", err)
+	}
+
+	// 构造 Kafka 消息
+	kafkaMsg := &sarama.ProducerMessage{
+		Topic:     topic,
+		Key:       sarama.StringEncoder(message.ShortCode),
+		Value:     sarama.ByteEncoder(messageBytes),
+		Timestamp: time.Now(),
+		Headers: []sarama.RecordHeader{
+			{
+				Key:   []byte("event_type"),
+				Value: []byte("click_event"),
+			},
+		},
+	}
+	// 发送消息写入 Input 通道
+	select {
+	case kp.producer.Input() <- kafkaMsg:
+		// 仅表示消息已进入发送队列
+		log.Printf("Message added to send queue: topic=%s, key=%s", topic, kafkaMsg.Key)
+	case <-time.After(5 * time.Second):
+		// 防止Input通道阻塞超时
+		return fmt.Errorf("timeout sending message to input channel")
 	}
 	return nil
 }

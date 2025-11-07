@@ -1,6 +1,9 @@
 package config
 
-import "time"
+import (
+	"redirect-service/internal/pkg/idgen"
+	"time"
+)
 
 type ServerConfig struct {
 	Port int    `mapstructure:"port"`
@@ -62,10 +65,16 @@ type GenerateService struct {
 	Timeout time.Duration `mapstructure:"timeout"`
 }
 
+type GeoIPConfig struct {
+	DBPath string `mapstructure:"db_path"`
+}
+
 type Config struct {
-	Server          ServerConfig    `mapstructure:"server"`
-	Redis           RedisConfig     `mapstructure:"redis"`
-	Kafka           KafkaConfig     `mapstructure:"kafka"`
-	Cache           CacheConfig     `mapstructure:"cache"`
-	GenerateService GenerateService `mapstructure:"generate_service"`
+	Server          ServerConfig          `mapstructure:"server"`
+	Redis           RedisConfig           `mapstructure:"redis"`
+	Kafka           KafkaConfig           `mapstructure:"kafka"`
+	Cache           CacheConfig           `mapstructure:"cache"`
+	GenerateService GenerateService       `mapstructure:"generate_service"`
+	GeoIP           GeoIPConfig           `mapstructure:"geo_ip"`
+	Generator       idgen.GeneratorConfig `mapstructure:"id_generator"`
 }
