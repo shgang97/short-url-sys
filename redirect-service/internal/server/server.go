@@ -66,7 +66,7 @@ func (s *Server) Start() error {
 	s.geoIPSvc = geoIPSvc
 
 	// 初始化 generate-service 客户端
-	genClient, err := generate.NewClient(&s.config.GenerateService)
+	genClient, err := generate.NewClient(&s.config.GenerateService, &s.config.Etcd)
 	if err != nil {
 		return fmt.Errorf("init generate client failed: %w", err)
 	}

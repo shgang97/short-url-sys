@@ -1,6 +1,7 @@
 package config
 
 import (
+	"redirect-service/internal/client/etcd"
 	"redirect-service/internal/pkg/idgen"
 	"time"
 )
@@ -70,11 +71,12 @@ type GeoIPConfig struct {
 }
 
 type Config struct {
-	Server          ServerConfig          `mapstructure:"server"`
-	Redis           RedisConfig           `mapstructure:"redis"`
-	Kafka           KafkaConfig           `mapstructure:"kafka"`
-	Cache           CacheConfig           `mapstructure:"cache"`
-	GenerateService GenerateService       `mapstructure:"generate_service"`
-	GeoIP           GeoIPConfig           `mapstructure:"geo_ip"`
-	Generator       idgen.GeneratorConfig `mapstructure:"id_generator"`
+	Server          ServerConfig            `mapstructure:"server"`
+	Redis           RedisConfig             `mapstructure:"redis"`
+	Kafka           KafkaConfig             `mapstructure:"kafka"`
+	Cache           CacheConfig             `mapstructure:"cache"`
+	GenerateService GenerateService         `mapstructure:"generate_service"`
+	GeoIP           GeoIPConfig             `mapstructure:"geo_ip"`
+	Generator       idgen.GeneratorConfig   `mapstructure:"id_generator"`
+	Etcd            etcdresolver.EtcdConfig `mapstructure:"etcd"`
 }

@@ -61,3 +61,12 @@ kafka:
 
 geo_ip:
   db_path:
+
+etcd:
+  endpoints:
+    - "localhost:2379"
+  resolver:
+    service_name: generate-service
+    ttl: 30
+    dial_timeout: 10
+    prefix: services
