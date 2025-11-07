@@ -66,6 +66,7 @@ func (h *RecordClickHandler) Handle(topic string, value []byte) bool {
 		Country:     msg.Country,
 		Region:      msg.Region,
 		City:        msg.City,
+		ClickBy:     msg.ClickBy,
 	}
 	if err := h.clickService.RecordClick(context.Background(), req); err != nil {
 		logger.Logger.Error("failed to record click", zap.String("topic", topic), zap.Error(err))
