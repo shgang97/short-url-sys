@@ -33,7 +33,7 @@ func NewClient(cfg *config.GenerateService, etcdCfg *etcdresolver.EtcdConfig) (*
 	}
 	// 建立连接
 	//conn, err := grpc.NewClient(cfg.Address, dialOptions...)
-	target := fmt.Sprintf("etcd///%s", etcdCfg.Resolver.ServiceName)
+	target := fmt.Sprintf("etcd:///%s", etcdCfg.Resolver.ServiceName)
 	conn, err := grpc.NewClient(target, dialOptions...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc client: %w", err)
