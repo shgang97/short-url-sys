@@ -45,7 +45,7 @@ func New(cfg *config.Config) *Server {
 
 func (s *Server) Start() error {
 	// 初始化Redis
-	redisClient, err := redis.NewRedis(&s.config.Redis)
+	redisClient, err := redis.NewRedis(&s.config.Redis, &s.config.Breaker)
 	if err != nil {
 		return fmt.Errorf("init redis failed: %w", err)
 	}
@@ -56,7 +56,7 @@ func (s *Server) Start() error {
 	s.generator = generator
 
 	// 初始化Repository
-	s.cacheRepo = cache.NewRepository(redisClient.Client, &s.config.Cache)
+	s.cacheRepo = cache.NewRepository(redisClient, &s.config.Cache)
 
 	// 初始化 GeoIPService
 	geoIPSvc, err := geoip.New(s.config.GeoIP.DBPath)

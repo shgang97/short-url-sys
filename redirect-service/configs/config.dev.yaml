@@ -69,3 +69,10 @@ etcd:
     ttl: 30
     dial_timeout: 10
     prefix: services
+
+breaker:
+  name: Redis Circuit Breaker
+  max_requests: 3
+  timeout: 15
+  interval: 30
+  threshold: 10

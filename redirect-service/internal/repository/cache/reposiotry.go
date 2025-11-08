@@ -5,12 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"redirect-service/internal/client/redis"
 	"redirect-service/internal/config"
 	"shared/constants"
 	shrErrors "shared/errors"
 	"time"
 
-	"github.com/redis/go-redis/v9"
+	redis9 "github.com/redis/go-redis/v9"
 )
 
 type Repository struct {
@@ -34,9 +35,9 @@ func (r *Repository) getKey(typ string, id string) string {
 // GetOriginalURL 从 Redis 缓存获取短链映射
 func (r *Repository) GetOriginalURL(ctx context.Context, shortCode string) (string, error) {
 	key := r.getKey("url", shortCode)
-	result, err := r.client.Get(ctx, key).Result()
+	result, err := r.client.Get(ctx, key)
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
+		if errors.Is(err, redis9.Nil) {
 			return "", shrErrors.ErrLinkNotFound
 		}
 		return "", &shrErrors.RepositoryError{Operation: "GetShortURL", Err: err}
@@ -62,7 +63,7 @@ func (r *Repository) SetShortURL(ctx context.Context, shortCode string, longURL 
 		}
 	}
 	key := r.getKey("url", shortCode)
-	err := r.client.Set(ctx, key, longURL, ttl).Err()
+	err := r.client.Set(ctx, key, longURL, ttl)
 	if err != nil {
 		return &shrErrors.RepositoryError{Operation: "SetShortURL", Err: err}
 	}
@@ -73,7 +74,7 @@ func (r *Repository) SetShortURL(ctx context.Context, shortCode string, longURL 
 func (r *Repository) DeleteShortURL(ctx context.Context, shortCode string) error {
 	key := r.getKey("url", shortCode)
 
-	err := r.client.Del(ctx, key).Err()
+	err := r.client.Del(ctx, key)
 	if err != nil {
 		return &shrErrors.RepositoryError{Operation: "DeleteShortURL", Err: err}
 	}

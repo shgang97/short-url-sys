@@ -10,6 +10,7 @@ var (
 	ErrInvalidURL       = NewBusinessError("invalid URL")
 	ErrShortCodeExists  = NewBusinessError("short code already exists")
 	ErrInvalidShortCode = NewBusinessError("invalid short code")
+	ErrBreakerOpen      = NewBusinessError("circuit breaker is open")
 )
 
 type BusinessError struct {
