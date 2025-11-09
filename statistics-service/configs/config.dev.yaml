@@ -23,15 +23,16 @@ kafka:
     - "localhost:9092"
   client_id: "statistics-service"   # 客户端标识
   version: "2.8.1"
-  group_id: "statistics-service-group"
-  topics:
-    - "short-link-click-events"
-  fetch_max_bytes: 1048576
-  consumer:
-    auto_commit: true
-    auto_commit_interval: 3600
-    auto_offset: "earliest"
-    session_timeout: 30s
+  interval: 5
+  groups:
+    - id: "record-detail"
+      topics:
+        - "short-link-click-events"
+      fetch_max_bytes: 1048576
+      auto_commit: true
+      auto_commit_interval: 3600
+      auto_offset: "earliest"
+      session_timeout: 30s
 
 id_generator:
   type: "sonyflake"

@@ -8,7 +8,8 @@ import (
 )
 
 type KafkaHandler struct {
-	router *HandlerRouter
+	router  *HandlerRouter
+	groupId string
 }
 
 func (k *KafkaHandler) Setup(session sarama.ConsumerGroupSession) error {
@@ -26,7 +27,7 @@ func (k *KafkaHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim s
 	// 循环读取消息
 	for msg := range claim.Messages() {
 		topic := msg.Topic
-		handler, exists := k.router.GetHandler(topic)
+		handler, exists := k.router.GetHandler(k.groupId, topic)
 		if !exists {
 			logger.Logger.Warn("Skipping message due to missing handler for ", zap.String("topic", topic))
 			continue

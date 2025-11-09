@@ -31,6 +31,7 @@ type Server struct {
 	clickSvc  *clickService.Service
 	generator idgen.Generator
 	detector  detector.DeviceDetector
+	manager   consumer.KafkaConsumerManager
 }
 
 func New(cfg *config.Config) *Server {
@@ -64,23 +65,27 @@ func (s *Server) Start() error {
 	// 初始化 Service
 	s.initService()
 
+	// 初始化 KafkaManager
+	manager := consumer.NewConsumerManager()
 	// 初始化 MessageHandler 并注册到 HandlerRouter
 	router := consumer.NewHandlerRouter()
-	for _, topic := range s.config.Kafka.Topics {
-		h, err := consumer.CreatHandler(topic, s.clickSvc)
-		if err != nil {
-			logger.Logger.Error("Failed to create MessageHandler", zap.String("topic", topic), zap.Error(err))
-		} else {
-			router.Register(topic, h)
+	for _, group := range s.config.Kafka.Groups {
+		for _, topic := range group.Topics {
+			h, err := consumer.CreatHandler(group.Id, topic, s.clickSvc)
+			if err != nil {
+				logger.Logger.Error("Failed to create MessageHandler", zap.String("topic", topic), zap.Error(err))
+			} else {
+				router.Register(group.Id, topic, h)
+			}
 		}
+		// 初始化KafkaConsumer
+		kafkaConsumer, err := consumer.NewKafkaConsumer(&s.config.Kafka, group, router)
+		if err != nil {
+			return fmt.Errorf("init kafka consumer failed: %v", err)
+		}
+		manager.AddConsumer(kafkaConsumer)
+		go kafkaConsumer.Start()
 	}
-
-	// 初始化KafkaConsumer
-	kafkaConsumer, err := consumer.NewKafkaConsumer(&s.config.Kafka, s.clickSvc, router)
-	if err != nil {
-		return fmt.Errorf("init kafka consumer failed: %v", err)
-	}
-	go kafkaConsumer.Start()
 
 	// 设置路由
 	setupRouter(s.config, s)
@@ -115,6 +120,10 @@ func (s *Server) waitForShutdown() {
 	logger.Logger.Info("Shutting down statistics-service server...")
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
+
+	// 关闭KafkaConsumer
+	s.manager.CloseAll()
+
 	if err := s.server.Shutdown(ctx); err != nil {
 		logger.Logger.Fatal("Failed to shut down statistics-service server", zap.Error(err))
 	}

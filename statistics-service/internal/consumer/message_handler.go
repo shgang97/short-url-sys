@@ -3,6 +3,8 @@ package consumer
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"shared/constants"
 	"shared/message"
 	"statistics-service/internal/pkg/logger"
 	"statistics-service/internal/service/click"
@@ -30,12 +32,17 @@ func NewHandlerRouter() *HandlerRouter {
 	}
 }
 
-func (r *HandlerRouter) Register(topic string, handler MessageHandler) {
-	r.handlers[topic] = handler
+func (r *HandlerRouter) Register(groupId, topic string, handler MessageHandler) {
+	r.handlers[getHandlerKey(topic, groupId)] = handler
 }
 
-func (r *HandlerRouter) GetHandler(topic string) (MessageHandler, bool) {
-	return r.handlers[topic], true
+func (r *HandlerRouter) GetHandler(groupId, topic string) (MessageHandler, bool) {
+	h, exist := r.handlers[getHandlerKey(topic, groupId)]
+	return h, exist
+}
+
+func getHandlerKey(groupId, topic string) string {
+	return fmt.Sprintf("%s_%s", groupId, topic)
 }
 
 type RecordClickHandler struct {
@@ -75,6 +82,13 @@ func (h *RecordClickHandler) Handle(topic string, value []byte) bool {
 	return true
 }
 
-func CreatHandler(topic string, clickService *click.Service) (MessageHandler, error) {
-	return NewRecordClickHandler(clickService), nil
+func CreatHandler(groupId, topic string, other interface{}) (MessageHandler, error) {
+	key := getHandlerKey(groupId, topic)
+	switch key {
+	case getHandlerKey(constants.StatsGroupDetail, constants.TopicRecordClickEvent):
+		service := other.(*click.Service)
+		return NewRecordClickHandler(service), nil
+	default:
+		return nil, fmt.Errorf("unknown topic '%s'", topic)
+	}
 }

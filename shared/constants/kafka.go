@@ -8,4 +8,8 @@ const (
 
 	// 记录点击事件
 	TopicRecordClickEvent = "short-link-click-events"
+
+	// statistics-service 消费者组
+	StatsGroupDetail = "record-detail"
+	StatsGroupTotal  = "record-total"
 )
