@@ -26,3 +26,25 @@ CREATE TABLE IF NOT EXISTS click_events (
     version INT UNSIGNED DEFAULT 0,
     INDEX idx_short_code_time (short_code, click_time)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='点击事件明细表';
+
+-- 点击统计汇总表(按天)
+CREATE TABLE IF NOT EXISTS click_stats_summary (
+    id              BIGINT PRIMARY KEY,
+    short_code      VARCHAR(20) NOT NULL COMMENT '短链码',
+    stat_date       DATE        NOT NULL COMMENT '统计日期',
+    total_clicks    INT         NOT NULL DEFAULT 0 COMMENT '总点击量',
+    unique_visitors INT         NOT NULL DEFAULT 0 COMMENT '独立访客数',
+    mobile_clicks   INT         NOT NULL DEFAULT 0 COMMENT '移动端点击量',
+    desktop_clicks  INT         NOT NULL DEFAULT 0 COMMENT '桌面端点击量',
+    tablet_clicks   INT         NOT NULL DEFAULT 0 COMMENT '平板点击量',
+    top_country     VARCHAR(100) COMMENT 'Top国家',
+    top_region      VARCHAR(100) COMMENT 'Top地区',
+    created_at      DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    created_by      VARCHAR(100),
+    updated_at      DATETIME(3),
+    updated_by      VARCHAR(100),
+    description     VARCHAR(100),
+    delete_flag     varchar(1)           DEFAULT 'N',
+    version         INT UNSIGNED         DEFAULT 0,
+    UNIQUE KEY uk_short_code_date (short_code, stat_date)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='点击统计汇总表(按天)';

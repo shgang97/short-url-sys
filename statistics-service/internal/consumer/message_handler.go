@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"shared/constants"
 	"shared/message"
 	"statistics-service/internal/pkg/logger"
 	"statistics-service/internal/service/click"
@@ -33,15 +32,15 @@ func NewHandlerRouter() *HandlerRouter {
 }
 
 func (r *HandlerRouter) Register(groupId, topic string, handler MessageHandler) {
-	r.handlers[getHandlerKey(topic, groupId)] = handler
+	r.handlers[GetHandlerKey(topic, groupId)] = handler
 }
 
 func (r *HandlerRouter) GetHandler(groupId, topic string) (MessageHandler, bool) {
-	h, exist := r.handlers[getHandlerKey(topic, groupId)]
+	h, exist := r.handlers[GetHandlerKey(topic, groupId)]
 	return h, exist
 }
 
-func getHandlerKey(groupId, topic string) string {
+func GetHandlerKey(groupId, topic string) string {
 	return fmt.Sprintf("%s_%s", groupId, topic)
 }
 
@@ -80,15 +79,4 @@ func (h *RecordClickHandler) Handle(topic string, value []byte) bool {
 		return false
 	}
 	return true
-}
-
-func CreatHandler(groupId, topic string, other interface{}) (MessageHandler, error) {
-	key := getHandlerKey(groupId, topic)
-	switch key {
-	case getHandlerKey(constants.StatsGroupDetail, constants.TopicRecordClickEvent):
-		service := other.(*click.Service)
-		return NewRecordClickHandler(service), nil
-	default:
-		return nil, fmt.Errorf("unknown topic '%s'", topic)
-	}
 }

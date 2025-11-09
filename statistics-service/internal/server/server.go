@@ -14,8 +14,10 @@ import (
 	"statistics-service/internal/pkg/idgen"
 	"statistics-service/internal/pkg/logger"
 	clickRepo "statistics-service/internal/repository/click"
+	summaryRepo "statistics-service/internal/repository/summary"
 	clickService "statistics-service/internal/service/click"
 	detector "statistics-service/internal/service/device_detector"
+	summaryService "statistics-service/internal/service/summary"
 	"syscall"
 	"time"
 
@@ -23,15 +25,17 @@ import (
 )
 
 type Server struct {
-	config    *config.Config
-	server    *http.Server
-	router    http.Handler
-	mysqlDB   *database.MySQLDB
-	clickRepo clickRepo.Repository
-	clickSvc  *clickService.Service
-	generator idgen.Generator
-	detector  detector.DeviceDetector
-	manager   consumer.KafkaConsumerManager
+	config      *config.Config
+	server      *http.Server
+	router      http.Handler
+	mysqlDB     *database.MySQLDB
+	clickRepo   clickRepo.Repository
+	summaryRepo *summaryRepo.Repository
+	clickSvc    *clickService.Service
+	summarySvc  *summaryService.Service
+	generator   idgen.Generator
+	detector    detector.DeviceDetector
+	manager     consumer.KafkaConsumerManager
 }
 
 func New(cfg *config.Config) *Server {
@@ -71,9 +75,10 @@ func (s *Server) Start() error {
 	router := consumer.NewHandlerRouter()
 	for _, group := range s.config.Kafka.Groups {
 		for _, topic := range group.Topics {
-			h, err := consumer.CreatHandler(group.Id, topic, s.clickSvc)
+			h, err := s.createMessageHandler(group.Id, topic, group)
 			if err != nil {
-				logger.Logger.Error("Failed to create MessageHandler", zap.String("topic", topic), zap.Error(err))
+				logger.Logger.Error("Failed to create MessageHandler",
+					zap.String("topic", topic), zap.Error(err))
 			} else {
 				router.Register(group.Id, topic, h)
 			}
@@ -133,6 +138,7 @@ func (s *Server) waitForShutdown() {
 
 func (s *Server) initRepository() {
 	s.clickRepo = clickRepo.NewMySQLRepository(s.mysqlDB.DB)
+	s.summaryRepo = summaryRepo.NewMySQLRepository(s.mysqlDB.DB)
 }
 
 func (s *Server) initService() {
@@ -141,5 +147,11 @@ func (s *Server) initService() {
 		s.clickRepo,
 		s.generator,
 		s.detector,
+	)
+
+	s.summarySvc = summaryService.NewService(
+		s.mysqlDB.DB,
+		s.summaryRepo,
+		s.generator,
 	)
 }

@@ -33,6 +33,15 @@ kafka:
       auto_commit_interval: 3600
       auto_offset: "earliest"
       session_timeout: 30s
+    - id: "record-total"
+      topics:
+        - "short-link-click-events"
+      fetch_max_bytes: 1048576
+      auto_commit: true
+      auto_commit_interval: 3600
+      auto_offset: "earliest"
+      session_timeout: 30s
+      buffer_size: 1000
 
 id_generator:
   type: "sonyflake"

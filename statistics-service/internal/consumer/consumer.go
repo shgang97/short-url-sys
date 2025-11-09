@@ -42,6 +42,7 @@ type GroupConfig struct {
 	AutoCommitInterval int64         `mapstructure:"auto_commit_interval"`
 	AutoOffset         string        `mapstructure:"auto_offset"`
 	SessionTimeout     time.Duration `mapstructure:"session_timeout"`
+	BufferSize         int           `mapstructure:"buffer_size"` // 批次消费控制缓冲区大小
 }
 
 func NewKafkaConsumer(cfg *KafkaConfig, groupCfg *GroupConfig, router *HandlerRouter) (*KafkaConsumer, error) {

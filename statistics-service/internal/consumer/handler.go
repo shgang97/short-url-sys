@@ -29,7 +29,8 @@ func (k *KafkaHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim s
 		topic := msg.Topic
 		handler, exists := k.router.GetHandler(k.groupId, topic)
 		if !exists {
-			logger.Logger.Warn("Skipping message due to missing handler for ", zap.String("topic", topic))
+			logger.Logger.Warn("Skipping message due to missing handler for ",
+				zap.String("groupId", k.groupId), zap.String("topic", topic))
 			continue
 		}
 		success := handler.Handle(topic, msg.Value)
