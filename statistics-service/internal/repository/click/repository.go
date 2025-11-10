@@ -98,6 +98,20 @@ func (r *repository) GetStatsSummary(
 	}
 	stats.Devices = deviceStats
 
+	// 获取浏览器统计
+	browserStats, err := r.getBrowserStats(ctx, shortCode, startDate, endDate)
+	if err != nil {
+		return nil, &errors.RepositoryError{Operation: "GetStatsSummary", Err: err}
+	}
+	stats.Browsers = browserStats
+
+	// 获取操作系统统计
+	systemStats, err := r.getOsStats(ctx, shortCode, startDate, endDate)
+	if err != nil {
+		return nil, &errors.RepositoryError{Operation: "GetStatsSummary", Err: err}
+	}
+	stats.Systems = systemStats
+
 	return &stats, nil
 }
 
@@ -219,6 +233,72 @@ func (r *repository) getDeviceStats(
 	stats := make(map[string]int64)
 	for _, stat := range deviceStats {
 		stats[stat.Device] = stat.Count
+	}
+	return stats, nil
+}
+
+// 获取浏览器统计
+func (r *repository) getBrowserStats(
+	ctx context.Context,
+	shortCode string,
+	startDate, endDate *time.Time,
+) (map[string]int64, error) {
+	var osStats []struct {
+		Browser string
+		Count   int64
+	}
+	query := r.db.WithContext(ctx).Model(&model.ClickEvent{}).
+		Select("COALESCE(browser, 'other') as browser, COUNT(*) as count").
+		Where("short_code = ? AND delete_flag = 'N'", shortCode)
+	if startDate != nil {
+		query = query.Where("click_time >= ?", startDate.Format("2006-01-02 15:04:05"))
+	}
+	if endDate != nil {
+		query = query.Where("click_time <= ?", endDate.Format("2006-01-02 15:04:05"))
+	}
+	err := query.
+		Group("COALESCE(browser, 'other')").
+		Order("count DESC").
+		Find(&osStats).Error
+	if err != nil {
+		return nil, err
+	}
+	stats := make(map[string]int64)
+	for _, stat := range osStats {
+		stats[stat.Browser] = stat.Count
+	}
+	return stats, nil
+}
+
+// 获取操作系统统计
+func (r *repository) getOsStats(
+	ctx context.Context,
+	shortCode string,
+	startDate, endDate *time.Time,
+) (map[string]int64, error) {
+	var osStats []struct {
+		Os    string
+		Count int64
+	}
+	query := r.db.WithContext(ctx).Model(&model.ClickEvent{}).
+		Select("COALESCE(os, 'other') as os, COUNT(*) as count").
+		Where("short_code = ? AND delete_flag = 'N'", shortCode)
+	if startDate != nil {
+		query = query.Where("click_time >= ?", startDate.Format("2006-01-02 15:04:05"))
+	}
+	if endDate != nil {
+		query = query.Where("click_time <= ?", endDate.Format("2006-01-02 15:04:05"))
+	}
+	err := query.
+		Group("COALESCE(os, 'other')").
+		Order("count DESC").
+		Find(&osStats).Error
+	if err != nil {
+		return nil, err
+	}
+	stats := make(map[string]int64)
+	for _, stat := range osStats {
+		stats[stat.Os] = stat.Count
 	}
 	return stats, nil
 }

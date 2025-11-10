@@ -56,4 +56,6 @@ type SummaryStats struct {
 	Referrers   map[string]int64 `json:"referrers,omitempty"`
 	Countries   map[string]int64 `json:"countries,omitempty"`
 	Devices     map[string]int64 `json:"devices,omitempty"`
+	Browsers    map[string]int64 `json:"browsers,omitempty"`
+	Systems     map[string]int64 `json:"systems,omitempty"`
 }

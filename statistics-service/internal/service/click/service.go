@@ -81,5 +81,7 @@ func (s *Service) GetStatsSummary(
 		Referrers:   summary.Referrers,
 		Countries:   summary.Countries,
 		Devices:     summary.Devices,
+		Browsers:    summary.Browsers,
+		Systems:     summary.Systems,
 	}, nil
 }
