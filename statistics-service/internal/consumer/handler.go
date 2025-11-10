@@ -13,7 +13,7 @@ type KafkaHandler struct {
 }
 
 func (k *KafkaHandler) Setup(session sarama.ConsumerGroupSession) error {
-	logger.Logger.Info("Setting up session for consumer")
+	logger.Logger.Info("Setting up session for consumer", zap.String("groupId", k.groupId))
 	return nil
 }
 
@@ -33,14 +33,7 @@ func (k *KafkaHandler) ConsumeClaim(session sarama.ConsumerGroupSession, claim s
 				zap.String("groupId", k.groupId), zap.String("topic", topic))
 			continue
 		}
-		success := handler.Handle(topic, msg.Value)
-		if success {
-			// 消费成功，提交offset
-			session.MarkMessage(msg, "")
-		} else {
-			// 消费失败
-			logger.Logger.Error("Failed to consume message for ", zap.String("topic", topic))
-		}
+		handler.Handle(topic, msg, session)
 	}
 
 	return nil

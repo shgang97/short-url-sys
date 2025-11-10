@@ -22,7 +22,7 @@ func (s *Server) createMessageHandler(groupId, topic string, cfg *consumer.Group
 	case consumer.GetHandlerKey(constants.StatsGroupDetail, constants.TopicRecordClickEvent):
 		return consumer.NewRecordClickHandler(s.clickSvc), nil
 	case consumer.GetHandlerKey(constants.StatsGroupTotal, constants.TopicRecordClickEvent):
-		return consumer.NewSummaryHandler(handlerKey, s.summarySvc, cfg.BufferSize), nil
+		return consumer.NewSummaryHandler(handlerKey, s.summarySvc, cfg.BatchSize, cfg.Spec), nil
 	default:
 		return nil, fmt.Errorf("unknown topic '%s'", topic)
 	}

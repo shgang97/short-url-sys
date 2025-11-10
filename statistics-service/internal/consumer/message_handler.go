@@ -9,6 +9,7 @@ import (
 	"statistics-service/internal/service/click"
 	"time"
 
+	"github.com/IBM/sarama"
 	"go.uber.org/zap"
 )
 
@@ -18,7 +19,7 @@ type MessageHandler interface {
 	// topic: 消息所属的Topic
 	// value: 消息体（原始字节）
 	// return: 处理是否成功
-	Handle(topic string, value []byte) bool
+	Handle(topic string, msg *sarama.ConsumerMessage, session sarama.ConsumerGroupSession)
 }
 
 type HandlerRouter struct {
@@ -52,31 +53,33 @@ func NewRecordClickHandler(clickService *click.Service) *RecordClickHandler {
 	return &RecordClickHandler{clickService: clickService}
 }
 
-func (h *RecordClickHandler) Handle(topic string, value []byte) bool {
-	var msg message.ClickEventMessage
-	if err := json.Unmarshal(value, &msg); err != nil {
+func (h *RecordClickHandler) Handle(topic string, msg *sarama.ConsumerMessage, session sarama.ConsumerGroupSession) {
+	var clickMsg message.ClickEventMessage
+	if err := json.Unmarshal(msg.Value, &clickMsg); err != nil {
 		logger.Logger.Error("failed to unmarshal click message", zap.String("topic", topic), zap.Error(err))
-		return false
+		session.MarkMessage(msg, "")
+		return
 	}
 	clickTime := time.Now()
-	if !msg.ClickTime.IsZero() {
-		clickTime = msg.ClickTime
+	if !clickMsg.ClickTime.IsZero() {
+		clickTime = clickMsg.ClickTime
 	}
 	req := &click.RecordClickReq{
-		ShortCode:   msg.ShortCode,
-		OriginalURL: msg.OriginalURL,
-		IP:          msg.IP,
-		UserAgent:   msg.UserAgent,
-		Referer:     msg.Referer,
+		ShortCode:   clickMsg.ShortCode,
+		OriginalURL: clickMsg.OriginalURL,
+		IP:          clickMsg.IP,
+		UserAgent:   clickMsg.UserAgent,
+		Referer:     clickMsg.Referer,
 		ClickTime:   clickTime,
-		Country:     msg.Country,
-		Region:      msg.Region,
-		City:        msg.City,
-		ClickBy:     msg.ClickBy,
+		Country:     clickMsg.Country,
+		Region:      clickMsg.Region,
+		City:        clickMsg.City,
+		ClickBy:     clickMsg.ClickBy,
 	}
 	if err := h.clickService.RecordClick(context.Background(), req); err != nil {
 		logger.Logger.Error("failed to record click", zap.String("topic", topic), zap.Error(err))
-		return false
+		session.MarkMessage(msg, "")
+		return
 	}
-	return true
+	session.MarkMessage(msg, "")
 }
