@@ -59,3 +59,9 @@ type SummaryStats struct {
 	Browsers    map[string]int64 `json:"browsers,omitempty"`
 	Systems     map[string]int64 `json:"systems,omitempty"`
 }
+
+type TimeSeriesStats struct {
+	Period         string
+	Clicks         int64
+	UniqueVisitors int64
+}

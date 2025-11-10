@@ -85,3 +85,37 @@ func (s *Service) GetStatsSummary(
 		Systems:     summary.Systems,
 	}, nil
 }
+
+func (s *Service) GetTimeSeriesSummary(
+	ctx context.Context,
+	shortCode string,
+	startTime *time.Time,
+	endTime *time.Time,
+	groupExpr string,
+	periodExpr string,
+) (*model.TimeSeriesResponse, error) {
+	seriesStats, err := s.clickRepo.GetClickTimeline(ctx, shortCode, startTime, endTime, groupExpr, periodExpr)
+	if err != nil {
+		return nil, err
+	}
+	timeSeries := make([]*model.TimeSeriesData, 0, len(seriesStats))
+	var totalClicks, totalUniqueClicks int64
+	for _, stat := range seriesStats {
+		timeSeries = append(timeSeries, &model.TimeSeriesData{
+			Period:         stat.Period,
+			Clicks:         stat.Clicks,
+			UniqueVisitors: stat.UniqueVisitors,
+		})
+		totalClicks += stat.Clicks
+		totalUniqueClicks += stat.UniqueVisitors
+	}
+	resp := &model.TimeSeriesResponse{
+		ShortCode:  shortCode,
+		TimeSeries: timeSeries,
+		Summary: &model.SummaryData{
+			TotalClicks:         totalClicks,
+			TotalUniqueVisitors: totalUniqueClicks,
+		},
+	}
+	return resp, nil
+}

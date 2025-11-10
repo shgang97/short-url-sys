@@ -47,7 +47,11 @@ func setupRouter(cfg *config.Config, srv *Server) {
 	api := router.Group("/api/v1")
 	statsRouter := api.Group("/stats")
 	{
-		statsRouter.GET("/:code", statsHandler.GetStatsSummary)
+		codeRouter := statsRouter.Group("/:code")
+		{
+			codeRouter.GET("/summary", statsHandler.GetStatsSummary)
+			codeRouter.GET("/time-series/:unit", statsHandler.GetTimeSeries)
+		}
 	}
 
 	api.GET("/info", func(c *gin.Context) {

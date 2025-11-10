@@ -15,6 +15,7 @@ type Repository interface {
 	// Create 创建点击事件
 	Create(ctx context.Context, event *model.ClickEvent) error
 	GetStatsSummary(ctx context.Context, shortCode string, startDate, endDate *time.Time) (*model.SummaryStats, error)
+	GetClickTimeline(ctx context.Context, shortCode string, startTime *time.Time, endTime *time.Time, groupExpr string, periodExpr string) ([]model.TimeSeriesStats, error)
 }
 
 type repository struct {
