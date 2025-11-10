@@ -42,3 +42,18 @@ type StatTotal struct {
 	UpdatedAt   time.Time
 	Version     int
 }
+
+// DailyStats 每日统计摘要
+type DailyStats struct {
+	Date      string `json:"date"`
+	Clicks    int64  `json:"clicks"`
+	UniqueIPs int64  `json:"unique_ips"`
+}
+
+type SummaryStats struct {
+	TotalClicks int64            `json:"total_clicks"`
+	DailyStats  []DailyStats     `json:"daily_stats,omitempty"`
+	Referrers   map[string]int64 `json:"referrers,omitempty"`
+	Countries   map[string]int64 `json:"countries,omitempty"`
+	Devices     map[string]int64 `json:"devices,omitempty"`
+}

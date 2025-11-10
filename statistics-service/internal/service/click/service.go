@@ -64,3 +64,22 @@ func (s *Service) setDefaultValues(ctx context.Context, clc *model.ClickEvent, n
 	clc.DeleteFlag = "N"
 	clc.Version = 0
 }
+
+func (s *Service) GetStatsSummary(
+	ctx context.Context,
+	shortCode string,
+	startDate, endDate *time.Time,
+) (*model.SummaryResponse, error) {
+	summary, err := s.clickRepo.GetStatsSummary(ctx, shortCode, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+	return &model.SummaryResponse{
+		ShortCode:   shortCode,
+		TotalClicks: summary.TotalClicks,
+		DailyStats:  summary.DailyStats,
+		Referrers:   summary.Referrers,
+		Countries:   summary.Countries,
+		Devices:     summary.Devices,
+	}, nil
+}

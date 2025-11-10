@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"shared/model"
 	"statistics-service/internal/config"
+	"statistics-service/internal/handler"
 	"statistics-service/internal/middleware"
 	"time"
 
@@ -18,6 +19,9 @@ func setupRouter(cfg *config.Config, srv *Server) {
 	// 设置全局中间件
 	router.Use(middleware.GinLogger())
 	router.Use(middleware.GinRecovery())
+
+	// 初始化处理器
+	statsHandler := handler.NewStatsHandler(srv.clickSvc)
 
 	// 健康检查点
 	router.GET("/health", func(c *gin.Context) {
@@ -41,6 +45,10 @@ func setupRouter(cfg *config.Config, srv *Server) {
 	})
 
 	api := router.Group("/api/v1")
+	statsRouter := api.Group("/stats")
+	{
+		statsRouter.GET("/:code", statsHandler.GetStatsSummary)
+	}
 
 	api.GET("/info", func(c *gin.Context) {
 		c.JSON(200, gin.H{
