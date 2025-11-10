@@ -65,7 +65,7 @@ func (h *SummaryHandler) Handle(topic string, value []byte) bool {
 func (h *SummaryHandler) triggerFlush() {
 	h.mu.Lock()
 	if len(h.buffer) == 0 {
-		h.bufferSize = 0
+		h.mu.Unlock()
 		return
 	}
 
