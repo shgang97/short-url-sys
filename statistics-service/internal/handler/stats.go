@@ -98,3 +98,37 @@ func (h *StatsHandler) GetTimeSeries(c *gin.Context) {
 	resp.Unit = string(unit)
 	c.JSON(http.StatusOK, resp)
 }
+
+func (h *StatsHandler) GetGeographicStats(c *gin.Context) {
+	shortCode := c.Param("code")
+	if shortCode == "" {
+		c.JSON(http.StatusBadRequest, model.ErrorResponse{
+			Error:   "invalid short code",
+			Message: "short code is required",
+		})
+		return
+	}
+	resp, err := h.clickService.GetGeographicStats(c.Request.Context(), shortCode)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *StatsHandler) GetPlatformStats(c *gin.Context) {
+	shortCode := c.Param("code")
+	if shortCode == "" {
+		c.JSON(http.StatusBadRequest, model.ErrorResponse{
+			Error:   "invalid short code",
+			Message: "short code is required",
+		})
+		return
+	}
+	resp, err := h.clickService.GetPlatformStats(c.Request.Context(), shortCode)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}

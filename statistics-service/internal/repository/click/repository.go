@@ -16,6 +16,8 @@ type Repository interface {
 	Create(ctx context.Context, event *model.ClickEvent) error
 	GetStatsSummary(ctx context.Context, shortCode string, startDate, endDate *time.Time) (*model.SummaryStats, error)
 	GetClickTimeline(ctx context.Context, shortCode string, startTime *time.Time, endTime *time.Time, groupExpr string, periodExpr string) ([]model.TimeSeriesStats, error)
+	GetGeographicStats(ctx context.Context, shortCode string) ([]*model.GeographicStats, error)
+	GetPlatformStats(ctx context.Context, shortCode string) ([]*model.PlatformStats, error)
 }
 
 type repository struct {

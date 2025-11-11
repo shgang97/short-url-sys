@@ -51,6 +51,8 @@ func setupRouter(cfg *config.Config, srv *Server) {
 		{
 			codeRouter.GET("/summary", statsHandler.GetStatsSummary)
 			codeRouter.GET("/time-series/:unit", statsHandler.GetTimeSeries)
+			codeRouter.GET("/geography", statsHandler.GetGeographicStats)
+			codeRouter.GET("/device", statsHandler.GetPlatformStats)
 		}
 	}
 

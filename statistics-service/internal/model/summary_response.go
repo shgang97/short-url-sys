@@ -31,3 +31,13 @@ type SummaryData struct {
 	TotalClicks         int64 `json:"total_clicks"`
 	TotalUniqueVisitors int64 `json:"total_unique_visitors"`
 }
+
+type GeographicResponse struct {
+	ShortCode       string             `json:"short_code"`
+	GeographicStats []*GeographicStats `json:"geographic_stats"`
+}
+
+type PlatformResponse struct {
+	ShortCode   string           `json:"short_code"`
+	DeviceStats []*PlatformStats `json:"device_stats"`
+}

@@ -119,3 +119,27 @@ func (s *Service) GetTimeSeriesSummary(
 	}
 	return resp, nil
 }
+
+func (s *Service) GetGeographicStats(ctx context.Context, shortCode string) (*model.GeographicResponse, error) {
+	stats, err := s.clickRepo.GetGeographicStats(ctx, shortCode)
+	if err != nil {
+		return nil, err
+	}
+	resp := &model.GeographicResponse{
+		ShortCode:       shortCode,
+		GeographicStats: stats,
+	}
+	return resp, nil
+}
+
+func (s *Service) GetPlatformStats(ctx context.Context, shortCode string) (*model.PlatformResponse, error) {
+	stats, err := s.clickRepo.GetPlatformStats(ctx, shortCode)
+	if err != nil {
+		return nil, err
+	}
+	resp := &model.PlatformResponse{
+		ShortCode:   shortCode,
+		DeviceStats: stats,
+	}
+	return resp, nil
+}
