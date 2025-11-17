@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func setupRouter(config *config.Config, srv *Server) {
@@ -44,6 +45,9 @@ func setupRouter(config *config.Config, srv *Server) {
 		}
 		c.JSON(http.StatusOK, healthRsp)
 	})
+
+	// 监控端点
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// 重定向路由
 	router.GET("/:code", redirectHandler.Redirect)
