@@ -49,6 +49,11 @@ func setupRouter(config *config.Config, srv *Server) {
 	// 监控端点
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
+	router.GET("/favicon.ico", func(c *gin.Context) {
+		// 返回 204 No Content 或者自定义 favicon
+		c.Status(http.StatusNoContent)
+	})
+
 	// 重定向路由
 	router.GET("/:code", redirectHandler.Redirect)
 

@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"redirect-service/internal/pkg/ipgen"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,6 +18,7 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set(UserIDKey, "1")
 		c.Set(UsernameKey, "system")
+		c.Request.Header.Set("X-Forwarded-For", ipgen.IpGenerator.GeneratePublicIP())
 		c.Next()
 	}
 }

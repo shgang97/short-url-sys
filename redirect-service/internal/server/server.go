@@ -13,6 +13,7 @@ import (
 	"redirect-service/internal/config"
 	"redirect-service/internal/consumer"
 	"redirect-service/internal/pkg/idgen"
+	"redirect-service/internal/pkg/ipgen"
 	"redirect-service/internal/producer"
 	"redirect-service/internal/repository/cache"
 	cacheService "redirect-service/internal/service/cache"
@@ -44,6 +45,9 @@ func New(cfg *config.Config) *Server {
 }
 
 func (s *Server) Start() error {
+	// 初始化IP随机生成器
+	ipgen.Init()
+
 	// 初始化Redis
 	redisClient, err := redis.NewRedis(&s.config.Redis, &s.config.Breaker)
 	if err != nil {
