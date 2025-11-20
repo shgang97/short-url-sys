@@ -1,9 +1,8 @@
 go 1.25.1
 
 use (
-    ./generate-service
-    ./shared
+	./generate-service
 	./redirect-service
-	./short-url-sys
+	./shared
 	./statistics-service
 )
