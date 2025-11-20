@@ -78,3 +78,9 @@ require (
 	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// 添加 shared 模块
+require shared v0.0.0
+
+// 本地替换
+replace shared => ../shared
