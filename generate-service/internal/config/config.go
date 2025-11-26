@@ -96,6 +96,10 @@ type Net struct {
 	MaxOpenRequests int `mapstructure:"max_open_requests"` // 最大并发请求数（幂等性需设为1）
 }
 
+type RateLimitConfig struct {
+	RequestPerMinute int `mapstructure:"requests_per_minute"`
+}
+
 type Config struct {
 	Server      ServerConfig        `mapstructure:"server"`
 	Database    DatabaseConfig      `mapstructure:"database"`
@@ -105,4 +109,5 @@ type Config struct {
 	Log         LogConfig           `mapstructure:"log"`
 	Kafka       KafkaConfig         `mapstructure:"kafka"`
 	Etcd        register.EtcdConfig `mapstructure:"etcd"`
+	RateLimit   RateLimitConfig     `mapstructure:"rate_limit"`
 }

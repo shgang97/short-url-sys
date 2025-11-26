@@ -7,6 +7,7 @@ import (
 	"generate-service/internal/server/middleware"
 	"time"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,6 +25,9 @@ func setupRouter(config *config.Config, srv *Server) {
 	// 初始化处理器
 	linkHandler := handler.NewLinkHandler(srv.linkSvc, config.Server.BaseURL)
 	qrcodeHandler := handler.NewQRCodeHandler(srv.linkSvc, config.Server.BaseURL)
+
+	// 注册 pprof 路由，默认路径是 /debug/pprof/
+	pprof.Register(router)
 
 	// 健康检查端点
 	router.GET("/health", func(c *gin.Context) {
@@ -59,7 +63,7 @@ func setupRouter(config *config.Config, srv *Server) {
 	})
 
 	api := router.Group("/api/v1")
-	api.Use(middleware.RateLimit(10)) // 每分钟10个请求
+	api.Use(middleware.RateLimit(config.RateLimit.RequestPerMinute)) // 每分钟10个请求/minute
 	{
 		// 短链相关接口
 		linkGroup := api.Group("/links")

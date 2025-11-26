@@ -63,3 +63,6 @@ etcd:
     addr: localhost:50051
     ttl: 30
     dial_timeout: 10
+
+rate_limit:
+  requests_per_minute: 10000
